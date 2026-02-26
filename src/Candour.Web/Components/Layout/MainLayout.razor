@@ -7,12 +7,27 @@
 
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
+                       Edge="Edge.Start" OnClick="ToggleDrawer" Class="d-md-none" />
         <MudText Typo="Typo.h5" Class="ml-3">Candour</MudText>
         <MudSpacer />
-        <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Home</MudButton>
-        <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
+        <div class="d-none d-md-flex">
+            <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Home</MudButton>
+            <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
+        </div>
     </MudAppBar>
-    <MudMainContent Class="pt-16 pa-4">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="pt-16 pa-4 pa-md-6">
         @Body
     </MudMainContent>
 </MudLayout>
+
+@code {
+    private bool _drawerOpen;
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

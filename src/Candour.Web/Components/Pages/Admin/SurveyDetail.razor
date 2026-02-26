@@ -51,7 +51,7 @@
                             @foreach (var token in _publishResult.Tokens.Take(20))
                             {
                                 <MudListItem T="string">
-                                    <MudText Typo="Typo.caption" Style="font-family: monospace;">
+                                    <MudText Typo="Typo.caption" Style="font-family: monospace; word-break: break-all;">
                                         /survey/@_survey.Id?t=@Uri.EscapeDataString(token)
                                     </MudText>
                                 </MudListItem>
@@ -103,21 +103,18 @@
 
                         @if (qr.OptionCounts.Any())
                         {
-                            <MudSimpleTable Dense="true" Class="mt-2">
-                                <thead>
-                                    <tr><th>Option</th><th>Count</th><th>Percentage</th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var (opt, count) in qr.OptionCounts)
-                                    {
-                                        <tr>
-                                            <td>@opt</td>
-                                            <td>@count</td>
-                                            <td>@(qr.OptionPercentages.GetValueOrDefault(opt, 0).ToString("F1"))%</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </MudSimpleTable>
+                            <MudTable Items="@qr.OptionCounts" Dense="true" Class="mt-2" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Option</MudTh>
+                                    <MudTh>Count</MudTh>
+                                    <MudTh>Percentage</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Option">@context.Key</MudTd>
+                                    <MudTd DataLabel="Count">@context.Value</MudTd>
+                                    <MudTd DataLabel="Percentage">@(qr.OptionPercentages.GetValueOrDefault(context.Key, 0).ToString("F1"))%</MudTd>
+                                </RowTemplate>
+                            </MudTable>
                         }
 
                         @if (qr.AverageRating.HasValue)

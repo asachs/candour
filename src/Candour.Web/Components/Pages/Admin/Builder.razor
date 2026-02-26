@@ -17,12 +17,12 @@
             <MudTextField @bind-Value="_description" Label="Description" Variant="Variant.Outlined" Lines="3" Class="mb-4" />
 
             <MudGrid>
-                <MudItem xs="6">
+                <MudItem xs="12" sm="6">
                     <MudNumericField @bind-Value="_threshold" Label="Anonymity Threshold"
                                      Variant="Variant.Outlined" Min="1" Max="1000"
                                      HelperText="Minimum responses before results visible" />
                 </MudItem>
-                <MudItem xs="6">
+                <MudItem xs="12" sm="6">
                     <MudNumericField @bind-Value="_jitterMinutes" Label="Timestamp Jitter (minutes)"
                                      Variant="Variant.Outlined" Min="0" Max="1440"
                                      HelperText="Random offset applied to submission times" />
@@ -39,11 +39,11 @@
         <MudCard Class="mb-4" Elevation="1">
             <MudCardContent>
                 <MudGrid>
-                    <MudItem xs="8">
+                    <MudItem xs="12" sm="8">
                         <MudTextField @bind-Value="_questions[idx].Text" Label="@($"Question {idx + 1}")"
                                       Variant="Variant.Outlined" />
                     </MudItem>
-                    <MudItem xs="4">
+                    <MudItem xs="12" sm="4">
                         <MudSelect @bind-Value="_questions[idx].Type" Label="Type" Variant="Variant.Outlined">
                             @foreach (var qt in Enum.GetValues<QuestionType>())
                             {
