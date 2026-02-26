@@ -11,6 +11,7 @@ public class SubmitResponseHandlerTests
     private readonly Mock<ISurveyRepository> _surveyRepo = new();
     private readonly Mock<IResponseRepository> _responseRepo = new();
     private readonly Mock<ITokenService> _tokenService = new();
+    private readonly Mock<IUsedTokenRepository> _usedTokenRepo = new();
     private readonly Mock<ITimestampJitterService> _jitterService = new();
     private readonly Mock<IBatchSecretProtector> _protector = new();
     private readonly SubmitResponseHandler _handler;
@@ -21,6 +22,7 @@ public class SubmitResponseHandlerTests
             _surveyRepo.Object,
             _responseRepo.Object,
             _tokenService.Object,
+            _usedTokenRepo.Object,
             _jitterService.Object,
             _protector.Object);
     }
@@ -94,7 +96,7 @@ public class SubmitResponseHandlerTests
         _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.ValidateToken("used-token", "secret")).Returns(true);
         _tokenService.Setup(t => t.HashToken("used-token")).Returns("hashed-used");
-        _tokenService.Setup(t => t.IsTokenUsedAsync("hashed-used", surveyId, It.IsAny<CancellationToken>()))
+        _usedTokenRepo.Setup(r => r.ExistsAsync("hashed-used", surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var command = new SubmitResponseCommand(surveyId, "used-token", new Dictionary<string, string>());
@@ -124,7 +126,7 @@ public class SubmitResponseHandlerTests
         _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.ValidateToken("valid-token", "secret")).Returns(true);
         _tokenService.Setup(t => t.HashToken("valid-token")).Returns("hashed-valid");
-        _tokenService.Setup(t => t.IsTokenUsedAsync("hashed-valid", surveyId, It.IsAny<CancellationToken>()))
+        _usedTokenRepo.Setup(r => r.ExistsAsync("hashed-valid", surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         var jitteredTime = new DateTime(2026, 1, 15, 12, 0, 0, DateTimeKind.Utc);
@@ -150,7 +152,7 @@ public class SubmitResponseHandlerTests
         Assert.True(result.Success);
         Assert.Null(result.Error);
 
-        _tokenService.Verify(t => t.MarkTokenUsedAsync("hashed-valid", surveyId, It.IsAny<CancellationToken>()), Times.Once);
+        _usedTokenRepo.Verify(r => r.AddAsync("hashed-valid", surveyId, It.IsAny<CancellationToken>()), Times.Once);
 
         Assert.NotNull(captured);
         Assert.Equal(surveyId, captured!.SurveyId);

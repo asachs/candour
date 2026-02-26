@@ -18,6 +18,7 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
     private readonly ISurveyRepository _surveyRepo;
     private readonly IResponseRepository _responseRepo;
     private readonly ITokenService _tokenService;
+    private readonly IUsedTokenRepository _usedTokenRepo;
     private readonly ITimestampJitterService _jitterService;
     private readonly IBatchSecretProtector _protector;
 
@@ -25,12 +26,14 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
         ISurveyRepository surveyRepo,
         IResponseRepository responseRepo,
         ITokenService tokenService,
+        IUsedTokenRepository usedTokenRepo,
         ITimestampJitterService jitterService,
         IBatchSecretProtector protector)
     {
         _surveyRepo = surveyRepo;
         _responseRepo = responseRepo;
         _tokenService = tokenService;
+        _usedTokenRepo = usedTokenRepo;
         _jitterService = jitterService;
         _protector = protector;
     }
@@ -50,11 +53,11 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
             return new SubmitResponseResult(false, "Invalid token");
 
         var tokenHash = _tokenService.HashToken(request.Token);
-        if (await _tokenService.IsTokenUsedAsync(tokenHash, request.SurveyId, ct))
+        if (await _usedTokenRepo.ExistsAsync(tokenHash, request.SurveyId, ct))
             return new SubmitResponseResult(false, "Token already used");
 
         // Mark token as used (UsedTokens table -- SEPARATE from Responses)
-        await _tokenService.MarkTokenUsedAsync(tokenHash, request.SurveyId, ct);
+        await _usedTokenRepo.AddAsync(tokenHash, request.SurveyId, ct);
 
         // Store response with jittered timestamp (Responses table -- NO link to UsedTokens)
         var response = new SurveyResponse

@@ -21,9 +21,10 @@ public static class DependencyInjection
         // Repositories
         services.AddScoped<ISurveyRepository, SurveyRepository>();
         services.AddScoped<IResponseRepository, ResponseRepository>();
+        services.AddScoped<IUsedTokenRepository, UsedTokenRepository>();
 
-        // Crypto
-        services.AddScoped<ITokenService, BlindTokenService>();
+        // Crypto — pure crypto, no DB dependency, safe as singleton
+        services.AddSingleton<ITokenService, BlindTokenService>();
         services.AddSingleton<ITimestampJitterService, TimestampJitterService>();
 
         // Data Protection for batch secret encryption at rest

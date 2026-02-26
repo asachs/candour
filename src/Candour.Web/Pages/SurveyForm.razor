@@ -1,0 +1,173 @@
+@page "/survey/{SurveyId:guid}"
+@inject ICandourApiClient Api
+
+<PageTitle>Survey - Candour</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (_survey == null)
+    {
+        <MudAlert Severity="Severity.Error">Survey not found.</MudAlert>
+    }
+    else if (_submitted)
+    {
+        <MudAlert Severity="Severity.Success" Class="mb-4">
+            Thank you! Your anonymous response has been recorded.
+        </MudAlert>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">
+            Your response cannot be linked back to you. The token has been consumed.
+        </MudText>
+    }
+    else if (!string.IsNullOrEmpty(_tokenError))
+    {
+        <MudAlert Severity="Severity.Error">@_tokenError</MudAlert>
+    }
+    else if (_survey.Status != "Active")
+    {
+        <MudAlert Severity="Severity.Warning">This survey is not currently accepting responses.</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.h4" GutterBottom="true">@_survey.Title</MudText>
+        <MudText Typo="Typo.body1" Class="mb-6">@_survey.Description</MudText>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+        }
+
+        @foreach (var question in _survey.Questions.OrderBy(q => q.Order))
+        {
+            <MudCard Class="mb-4" Elevation="1">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">
+                        @question.Text
+                        @if (question.Required) { <MudText Typo="Typo.caption" Color="Color.Error" Class="d-inline">*</MudText> }
+                    </MudText>
+
+                    @switch (question.Type)
+                    {
+                        case "MultipleChoice":
+                            <MudRadioGroup T="string" Value="@GetAnswer(question.Id)" ValueChanged="@(v => SetAnswer(question.Id, v))">
+                                @foreach (var option in question.Options)
+                                {
+                                    <MudRadio T="string" Value="@option">@option</MudRadio>
+                                }
+                            </MudRadioGroup>
+                            break;
+
+                        case "YesNo":
+                            <MudRadioGroup T="string" Value="@GetAnswer(question.Id)" ValueChanged="@(v => SetAnswer(question.Id, v))">
+                                <MudRadio T="string" Value="@("Yes")">Yes</MudRadio>
+                                <MudRadio T="string" Value="@("No")">No</MudRadio>
+                            </MudRadioGroup>
+                            break;
+
+                        case "FreeText":
+                            <MudTextField T="string" Value="@GetAnswer(question.Id)" ValueChanged="@(v => SetAnswer(question.Id, v))"
+                                          Lines="3" Variant="Variant.Outlined" />
+                            break;
+
+                        case "Rating":
+                            <MudRating SelectedValue="@GetRating(question.Id)"
+                                       SelectedValueChanged="@(v => SetAnswer(question.Id, v.ToString()))"
+                                       MaxValue="5" />
+                            break;
+
+                        case "Matrix":
+                            <MudSelect T="string" Value="@GetAnswer(question.Id)" ValueChanged="@(v => SetAnswer(question.Id, v))"
+                                       Variant="Variant.Outlined" Label="Select one">
+                                @foreach (var opt in question.Options)
+                                {
+                                    <MudSelectItem T="string" Value="@opt">@opt</MudSelectItem>
+                                }
+                            </MudSelect>
+                            break;
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitResponse"
+                   Disabled="_submitting" FullWidth="true" Size="Size.Large" Class="mt-4">
+            @if (_submitting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Submit Anonymously
+        </MudButton>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [SupplyParameterFromQuery(Name = "t")] public string? Token { get; set; }
+
+    private SurveyDto? _survey;
+    private Dictionary<string, string> _answers = new();
+    private bool _loading = true;
+    private bool _submitted;
+    private bool _submitting;
+    private string? _error;
+    private string? _tokenError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _survey = await Api.GetSurveyAsync(SurveyId);
+
+        if (_survey != null && !string.IsNullOrEmpty(Token))
+        {
+            var validation = await Api.ValidateTokenAsync(SurveyId, Token);
+            if (!validation.Valid)
+                _tokenError = validation.Error;
+        }
+        else if (_survey != null && string.IsNullOrEmpty(Token))
+        {
+            _tokenError = "No survey token provided. Use the link given to you.";
+        }
+
+        _loading = false;
+    }
+
+    private string GetAnswer(Guid questionId)
+        => _answers.TryGetValue(questionId.ToString(), out var val) ? val : "";
+
+    private int GetRating(Guid questionId)
+        => int.TryParse(GetAnswer(questionId), out var r) ? r : 0;
+
+    private void SetAnswer(Guid questionId, string? value)
+    {
+        if (value != null)
+            _answers[questionId.ToString()] = value;
+    }
+
+    private async Task SubmitResponse()
+    {
+        if (string.IsNullOrEmpty(Token))
+        {
+            _error = "No survey token provided. Use the link given to you.";
+            return;
+        }
+
+        _submitting = true;
+        _error = null;
+
+        var request = new SubmitResponseRequest
+        {
+            Token = Token,
+            Answers = _answers
+        };
+
+        var result = await Api.SubmitResponseAsync(SurveyId, request);
+
+        if (result.Success)
+            _submitted = true;
+        else
+            _error = result.Error;
+
+        _submitting = false;
+    }
+}

@@ -12,15 +12,18 @@ public class ValidateTokenHandler : IRequestHandler<ValidateTokenQuery, Validate
 {
     private readonly ISurveyRepository _surveyRepo;
     private readonly ITokenService _tokenService;
+    private readonly IUsedTokenRepository _usedTokenRepo;
     private readonly IBatchSecretProtector _protector;
 
     public ValidateTokenHandler(
         ISurveyRepository surveyRepo,
         ITokenService tokenService,
+        IUsedTokenRepository usedTokenRepo,
         IBatchSecretProtector protector)
     {
         _surveyRepo = surveyRepo;
         _tokenService = tokenService;
+        _usedTokenRepo = usedTokenRepo;
         _protector = protector;
     }
 
@@ -38,7 +41,7 @@ public class ValidateTokenHandler : IRequestHandler<ValidateTokenQuery, Validate
             return new ValidateTokenResult(false, "Invalid token");
 
         var tokenHash = _tokenService.HashToken(request.Token);
-        if (await _tokenService.IsTokenUsedAsync(tokenHash, request.SurveyId, ct))
+        if (await _usedTokenRepo.ExistsAsync(tokenHash, request.SurveyId, ct))
             return new ValidateTokenResult(false, "Token already used");
 
         return new ValidateTokenResult(true);

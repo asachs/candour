@@ -1,0 +1,18 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "CosmosDb__ConnectionString": "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
+    "CosmosDb__DatabaseName": "candour",
+    "Candour__ApiKey": "",
+    "Candour__Auth__UseEntraId": "false",
+    "Candour__Auth__TenantId": "",
+    "Candour__Auth__ClientId": "",
+    "Candour__Auth__Audience": ""
+  },
+  "Host": {
+    "CORS": "http://localhost:5000,http://localhost:5001,https://localhost:5001",
+    "CORSCredentials": true
+  }
+}

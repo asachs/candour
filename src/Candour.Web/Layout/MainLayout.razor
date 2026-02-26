@@ -1,0 +1,49 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
+                       Edge="Edge.Start" OnClick="ToggleDrawer" Class="d-md-none" />
+        <MudText Typo="Typo.h5" Class="ml-3">Candour</MudText>
+        <MudSpacer />
+        <div class="d-none d-md-flex">
+            <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Home</MudButton>
+            <AuthorizeView>
+                <Authorized>
+                    <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
+                    <MudButton Href="authentication/logout" Color="Color.Inherit" Variant="Variant.Text">Logout</MudButton>
+                </Authorized>
+                <NotAuthorized>
+                    <MudButton Href="authentication/login" Color="Color.Inherit" Variant="Variant.Text">Login</MudButton>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+                    <MudNavLink Href="authentication/logout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+                </Authorized>
+                <NotAuthorized>
+                    <MudNavLink Href="authentication/login" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent Class="pt-16 pa-4 pa-md-6">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen;
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}

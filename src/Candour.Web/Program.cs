@@ -1,28 +1,48 @@
-using Candour.Application;
-using Candour.Infrastructure;
-using Candour.Web.Components;
+using Candour.Shared.Services;
+using Candour.Web.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<Candour.Web.App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
 
-var app = builder.Build();
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
+var useEntraId = builder.Configuration.GetValue<bool>("AzureAd:Enabled");
 
-if (!app.Environment.IsDevelopment())
+if (useEntraId)
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    builder.Services.AddMsalAuthentication(options =>
+    {
+        builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+        var apiScope = builder.Configuration["AzureAd:ApiScope"];
+        if (!string.IsNullOrEmpty(apiScope))
+        {
+            options.ProviderOptions.DefaultAccessTokenScopes.Add(apiScope);
+        }
+    });
+
+    builder.Services.AddScoped(sp =>
+    {
+        var handler = sp.GetRequiredService<AuthorizationMessageHandler>()
+            .ConfigureHandler(authorizedUrls: new[] { apiBaseUrl });
+
+        handler.InnerHandler = new HttpClientHandler();
+        return new HttpClient(handler) { BaseAddress = new Uri(apiBaseUrl) };
+    });
+}
+else
+{
+    builder.Services.AddAuthorizationCore();
+    builder.Services.AddScoped<AuthenticationStateProvider, DevAuthStateProvider>();
+    builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 }
 
-app.UseAntiforgery();
+builder.Services.AddScoped<ICandourApiClient, CandourApiClient>();
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();
+await builder.Build().RunAsync();

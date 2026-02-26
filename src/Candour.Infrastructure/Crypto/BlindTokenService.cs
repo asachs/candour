@@ -2,17 +2,10 @@ namespace Candour.Infrastructure.Crypto;
 
 using System.Security.Cryptography;
 using System.Text;
-using Candour.Core.Entities;
 using Candour.Core.Interfaces;
-using Candour.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 public class BlindTokenService : ITokenService
 {
-    private readonly CandourDbContext _db;
-
-    public BlindTokenService(CandourDbContext db) => _db = db;
-
     public string GenerateBatchSecret()
     {
         var key = new byte[32]; // 256 bits
@@ -63,18 +56,5 @@ public class BlindTokenService : ITokenService
         {
             return false;
         }
-    }
-
-    public async Task<bool> IsTokenUsedAsync(string tokenHash, Guid surveyId, CancellationToken ct = default)
-        => await _db.UsedTokens.AnyAsync(t => t.TokenHash == tokenHash && t.SurveyId == surveyId, ct);
-
-    public async Task MarkTokenUsedAsync(string tokenHash, Guid surveyId, CancellationToken ct = default)
-    {
-        _db.UsedTokens.Add(new UsedToken
-        {
-            TokenHash = tokenHash,
-            SurveyId = surveyId
-        });
-        await _db.SaveChangesAsync(ct);
     }
 }

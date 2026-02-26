@@ -1,24 +1,15 @@
 namespace Candour.Infrastructure.Tests;
 
 using Candour.Infrastructure.Crypto;
-using Candour.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 public class BlindTokenServiceTests
 {
-    private static CandourDbContext CreateContext(string dbName)
-    {
-        var options = new DbContextOptionsBuilder<CandourDbContext>()
-            .UseInMemoryDatabase(databaseName: dbName)
-            .Options;
-        return new CandourDbContext(options);
-    }
+    private static BlindTokenService CreateService() => new();
 
     [Fact]
     public void GenerateBatchSecret_ReturnsBase64Of32Bytes()
     {
-        using var ctx = CreateContext(nameof(GenerateBatchSecret_ReturnsBase64Of32Bytes));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
 
         var secret = service.GenerateBatchSecret();
 
@@ -29,8 +20,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void GenerateBatchSecret_ProducesUniqueValues()
     {
-        using var ctx = CreateContext(nameof(GenerateBatchSecret_ProducesUniqueValues));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
 
         var secrets = Enumerable.Range(0, 10).Select(_ => service.GenerateBatchSecret()).ToList();
 
@@ -40,8 +30,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void GenerateToken_ReturnsCompoundFormat()
     {
-        using var ctx = CreateContext(nameof(GenerateToken_ReturnsCompoundFormat));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
 
         var token = service.GenerateToken(secret);
@@ -58,8 +47,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void GenerateToken_DifferentCallsProduceDifferentTokens()
     {
-        using var ctx = CreateContext(nameof(GenerateToken_DifferentCallsProduceDifferentTokens));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
 
         var tokens = Enumerable.Range(0, 20).Select(_ => service.GenerateToken(secret)).ToList();
@@ -70,8 +58,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void HashToken_Returns64CharLowercaseHex()
     {
-        using var ctx = CreateContext(nameof(HashToken_Returns64CharLowercaseHex));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -84,8 +71,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void HashToken_IsDeterministic()
     {
-        using var ctx = CreateContext(nameof(HashToken_IsDeterministic));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
 
         var hash1 = service.HashToken("test-token-value");
         var hash2 = service.HashToken("test-token-value");
@@ -96,8 +82,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void HashToken_DifferentInputsProduceDifferentHashes()
     {
-        using var ctx = CreateContext(nameof(HashToken_DifferentInputsProduceDifferentHashes));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
 
         var hash1 = service.HashToken("token-a");
         var hash2 = service.HashToken("token-b");
@@ -108,8 +93,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_AcceptsGeneratedToken()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_AcceptsGeneratedToken));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -121,8 +105,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_RejectsNonBase64()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsNonBase64));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
 
         var isValid = service.ValidateToken("not!!!base64", secret);
@@ -133,8 +116,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_RejectsTamperedHmac()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsTamperedHmac));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -152,8 +134,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_RejectsTokenWithWrongSecret()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsTokenWithWrongSecret));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret1 = service.GenerateBatchSecret();
         var secret2 = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret1);
@@ -166,8 +147,7 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_RejectsTamperedNonce()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsTamperedNonce));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -185,52 +165,11 @@ public class BlindTokenServiceTests
     [Fact]
     public void ValidateToken_RejectsEmptyString()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsEmptyString));
-        var service = new BlindTokenService(ctx);
+        var service = CreateService();
         var secret = service.GenerateBatchSecret();
 
         var isValid = service.ValidateToken("", secret);
 
         Assert.False(isValid);
-    }
-
-    [Fact]
-    public async Task IsTokenUsedAsync_ReturnsFalseForUnusedToken()
-    {
-        using var ctx = CreateContext(nameof(IsTokenUsedAsync_ReturnsFalseForUnusedToken));
-        var service = new BlindTokenService(ctx);
-
-        var isUsed = await service.IsTokenUsedAsync("somehash", Guid.NewGuid());
-
-        Assert.False(isUsed);
-    }
-
-    [Fact]
-    public async Task MarkTokenUsedAsync_ThenIsTokenUsedAsync_ReturnsTrue()
-    {
-        using var ctx = CreateContext(nameof(MarkTokenUsedAsync_ThenIsTokenUsedAsync_ReturnsTrue));
-        var service = new BlindTokenService(ctx);
-        var surveyId = Guid.NewGuid();
-        var tokenHash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-
-        await service.MarkTokenUsedAsync(tokenHash, surveyId);
-        var isUsed = await service.IsTokenUsedAsync(tokenHash, surveyId);
-
-        Assert.True(isUsed);
-    }
-
-    [Fact]
-    public async Task IsTokenUsedAsync_IsScopedToSurvey()
-    {
-        using var ctx = CreateContext(nameof(IsTokenUsedAsync_IsScopedToSurvey));
-        var service = new BlindTokenService(ctx);
-        var surveyA = Guid.NewGuid();
-        var surveyB = Guid.NewGuid();
-        var tokenHash = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-
-        await service.MarkTokenUsedAsync(tokenHash, surveyA);
-
-        Assert.True(await service.IsTokenUsedAsync(tokenHash, surveyA));
-        Assert.False(await service.IsTokenUsedAsync(tokenHash, surveyB));
     }
 }

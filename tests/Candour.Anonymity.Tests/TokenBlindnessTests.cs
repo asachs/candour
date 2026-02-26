@@ -1,24 +1,13 @@
 namespace Candour.Anonymity.Tests;
 
 using Candour.Infrastructure.Crypto;
-using Candour.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 public class TokenBlindnessTests
 {
-    private CandourDbContext CreateInMemoryDb()
-    {
-        var options = new DbContextOptionsBuilder<CandourDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        return new CandourDbContext(options);
-    }
-
     [Fact]
     public void GenerateBatchSecret_Returns256BitKey()
     {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
+        var service = new BlindTokenService();
 
         var secret = service.GenerateBatchSecret();
         var bytes = Convert.FromBase64String(secret);
@@ -29,8 +18,7 @@ public class TokenBlindnessTests
     [Fact]
     public void GenerateToken_ProducesCompoundNonceHmacFormat()
     {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
+        var service = new BlindTokenService();
         var secret = service.GenerateBatchSecret();
 
         var token = service.GenerateToken(secret);
@@ -48,8 +36,7 @@ public class TokenBlindnessTests
     [Fact]
     public void HashToken_ProducesConsistentSha256Hash()
     {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
+        var service = new BlindTokenService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -63,8 +50,7 @@ public class TokenBlindnessTests
     [Fact]
     public void HashToken_CannotBeReversedToOriginalToken()
     {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
+        var service = new BlindTokenService();
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
 
@@ -76,27 +62,9 @@ public class TokenBlindnessTests
     }
 
     [Fact]
-    public async Task DuplicateToken_IsRejected()
-    {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
-        var secret = service.GenerateBatchSecret();
-        var token = service.GenerateToken(secret);
-        var hash = service.HashToken(token);
-        var surveyId = Guid.NewGuid();
-
-        Assert.False(await service.IsTokenUsedAsync(hash, surveyId));
-
-        await service.MarkTokenUsedAsync(hash, surveyId);
-
-        Assert.True(await service.IsTokenUsedAsync(hash, surveyId));
-    }
-
-    [Fact]
     public void DifferentTokens_ProduceDifferentHashes()
     {
-        using var db = CreateInMemoryDb();
-        var service = new BlindTokenService(db);
+        var service = new BlindTokenService();
         var secret = service.GenerateBatchSecret();
 
         var token1 = service.GenerateToken(secret);
