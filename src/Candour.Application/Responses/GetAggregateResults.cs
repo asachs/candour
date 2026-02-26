@@ -75,7 +75,7 @@ public class GetAggregateResultsHandler : IRequestHandler<GetAggregateResultsQue
                         if (double.TryParse(answer, out var rating))
                         {
                             ratings.Add(rating);
-                            var key = answer;
+                            var key = $"{answer} / 5";
                             aggregate.OptionCounts.TryGetValue(key, out var count);
                             aggregate.OptionCounts[key] = count + 1;
                         }

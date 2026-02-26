@@ -211,9 +211,9 @@ public class GetAggregateResultsHandlerTests
         Assert.Equal("Rating", q.QuestionType);
         Assert.NotNull(q.AverageRating);
         Assert.Equal(4.0, q.AverageRating!.Value);
-        Assert.Equal(1, q.OptionCounts["3"]);
-        Assert.Equal(2, q.OptionCounts["4"]);
-        Assert.Equal(1, q.OptionCounts["5"]);
+        Assert.Equal(1, q.OptionCounts["3 / 5"]);
+        Assert.Equal(2, q.OptionCounts["4 / 5"]);
+        Assert.Equal(1, q.OptionCounts["5 / 5"]);
     }
 
     [Fact]
