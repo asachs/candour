@@ -1,0 +1,18 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudText Typo="Typo.h5" Class="ml-3">Candour</MudText>
+        <MudSpacer />
+        <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Home</MudButton>
+        <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
+    </MudAppBar>
+    <MudMainContent Class="pt-16 pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>

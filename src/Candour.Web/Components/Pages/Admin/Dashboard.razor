@@ -1,0 +1,79 @@
+@page "/admin"
+@using Candour.Application.Surveys
+@using MediatR
+@rendermode InteractiveServer
+@inject IMediator Mediator
+@inject NavigationManager Nav
+
+<PageTitle>Admin Dashboard - Candour</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    <MudText Typo="Typo.h4" GutterBottom="true">Survey Dashboard</MudText>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/admin/builder" Class="mb-4">
+        Create New Survey
+    </MudButton>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    }
+    else if (_surveys.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">No surveys yet. Create your first one!</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@_surveys" Hover="true" Elevation="2">
+            <HeaderContent>
+                <MudTh>Title</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Threshold</MudTh>
+                <MudTh>Created</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Title">@context.Title</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Threshold">@context.AnonymityThreshold</MudTd>
+                <MudTd DataLabel="Created">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
+                               Href="@($"/admin/survey/{context.Id}")">View</MudButton>
+                    @if (context.Status == Core.Enums.SurveyStatus.Draft)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                                   OnClick="@(() => PublishSurvey(context.Id))">Publish</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<Core.Entities.Survey> _surveys = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _surveys = await Mediator.Send(new ListSurveysQuery());
+        _loading = false;
+    }
+
+    private Color GetStatusColor(Core.Enums.SurveyStatus status) => status switch
+    {
+        Core.Enums.SurveyStatus.Draft => Color.Default,
+        Core.Enums.SurveyStatus.Active => Color.Success,
+        Core.Enums.SurveyStatus.Closed => Color.Error,
+        _ => Color.Default
+    };
+
+    private async Task PublishSurvey(Guid surveyId)
+    {
+        await Mediator.Send(new PublishSurveyCommand(surveyId));
+        _surveys = await Mediator.Send(new ListSurveysQuery());
+    }
+}

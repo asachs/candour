@@ -1,0 +1,46 @@
+services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_DB: candour
+      POSTGRES_USER: candour
+      POSTGRES_PASSWORD: candour_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - candour-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U candour"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: containers/Containerfile
+      target: api
+    ports:
+      - "5001:5001"
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=candour;Username=candour;Password=candour_dev_password"
+      Candour__AI__Provider: "None"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: containers/Containerfile
+      target: web
+    ports:
+      - "5000:5000"
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=candour;Username=candour;Password=candour_dev_password"
+      ApiBaseUrl: "http://api:5001"
+    depends_on:
+      - api
+
+volumes:
+  candour-data:
