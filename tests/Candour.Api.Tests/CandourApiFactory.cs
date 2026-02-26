@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Candour.Infrastructure.Data;
 
@@ -12,6 +13,14 @@ public class CandourApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Candour:ApiKey"] = "test-api-key-for-integration-tests"
+            });
+        });
+
         builder.ConfigureServices(services =>
         {
             // Remove ALL Entity Framework Core service descriptors to avoid dual-provider conflict.

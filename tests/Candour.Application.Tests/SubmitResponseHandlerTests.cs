@@ -12,6 +12,7 @@ public class SubmitResponseHandlerTests
     private readonly Mock<IResponseRepository> _responseRepo = new();
     private readonly Mock<ITokenService> _tokenService = new();
     private readonly Mock<ITimestampJitterService> _jitterService = new();
+    private readonly Mock<IBatchSecretProtector> _protector = new();
     private readonly SubmitResponseHandler _handler;
 
     public SubmitResponseHandlerTests()
@@ -20,7 +21,8 @@ public class SubmitResponseHandlerTests
             _surveyRepo.Object,
             _responseRepo.Object,
             _tokenService.Object,
-            _jitterService.Object);
+            _jitterService.Object,
+            _protector.Object);
     }
 
     [Fact]
@@ -68,6 +70,7 @@ public class SubmitResponseHandlerTests
         var survey = new Survey { Id = surveyId, Status = SurveyStatus.Active, BatchSecret = "secret" };
         _surveyRepo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.ValidateToken("bad-token", "secret")).Returns(false);
 
         var command = new SubmitResponseCommand(surveyId, "bad-token", new Dictionary<string, string>());
@@ -88,6 +91,7 @@ public class SubmitResponseHandlerTests
         var survey = new Survey { Id = surveyId, Status = SurveyStatus.Active, BatchSecret = "secret" };
         _surveyRepo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.ValidateToken("used-token", "secret")).Returns(true);
         _tokenService.Setup(t => t.HashToken("used-token")).Returns("hashed-used");
         _tokenService.Setup(t => t.IsTokenUsedAsync("hashed-used", surveyId, It.IsAny<CancellationToken>()))
@@ -117,6 +121,7 @@ public class SubmitResponseHandlerTests
         };
         _surveyRepo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.ValidateToken("valid-token", "secret")).Returns(true);
         _tokenService.Setup(t => t.HashToken("valid-token")).Returns("hashed-valid");
         _tokenService.Setup(t => t.IsTokenUsedAsync("hashed-valid", surveyId, It.IsAny<CancellationToken>()))

@@ -10,11 +10,13 @@ public class CreateSurveyHandlerTests
 {
     private readonly Mock<ISurveyRepository> _repo = new();
     private readonly Mock<ITokenService> _tokenService = new();
+    private readonly Mock<IBatchSecretProtector> _protector = new();
     private readonly CreateSurveyHandler _handler;
 
     public CreateSurveyHandlerTests()
     {
-        _handler = new CreateSurveyHandler(_repo.Object, _tokenService.Object);
+        _protector.Setup(p => p.Protect(It.IsAny<string>())).Returns<string>(s => s);
+        _handler = new CreateSurveyHandler(_repo.Object, _tokenService.Object, _protector.Object);
     }
 
     [Fact]
@@ -67,6 +69,7 @@ public class CreateSurveyHandlerTests
         Assert.False(q2.Required);
 
         _tokenService.Verify(t => t.GenerateBatchSecret(), Times.Once);
+        _protector.Verify(p => p.Protect(batchSecret), Times.Once);
         _repo.Verify(r => r.AddAsync(It.IsAny<Survey>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 

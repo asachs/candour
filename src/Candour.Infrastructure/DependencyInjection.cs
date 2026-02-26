@@ -4,6 +4,7 @@ using Candour.Core.Interfaces;
 using Candour.Infrastructure.AI;
 using Candour.Infrastructure.Crypto;
 using Candour.Infrastructure.Data;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,10 @@ public static class DependencyInjection
         // Crypto
         services.AddScoped<ITokenService, BlindTokenService>();
         services.AddSingleton<ITimestampJitterService, TimestampJitterService>();
+
+        // Data Protection for batch secret encryption at rest
+        services.AddDataProtection();
+        services.AddSingleton<IBatchSecretProtector, DataProtectionBatchSecretProtector>();
 
         // AI (default: disabled)
         var aiProvider = configuration.GetValue<string>("Candour:AI:Provider") ?? "None";

@@ -12,11 +12,13 @@ public class PublishSurveyHandler : IRequestHandler<PublishSurveyCommand, Publis
 {
     private readonly ISurveyRepository _repo;
     private readonly ITokenService _tokenService;
+    private readonly IBatchSecretProtector _protector;
 
-    public PublishSurveyHandler(ISurveyRepository repo, ITokenService tokenService)
+    public PublishSurveyHandler(ISurveyRepository repo, ITokenService tokenService, IBatchSecretProtector protector)
     {
         _repo = repo;
         _tokenService = tokenService;
+        _protector = protector;
     }
 
     public async Task<PublishSurveyResult> Handle(PublishSurveyCommand request, CancellationToken ct)
@@ -24,11 +26,15 @@ public class PublishSurveyHandler : IRequestHandler<PublishSurveyCommand, Publis
         var survey = await _repo.GetByIdAsync(request.SurveyId, ct)
             ?? throw new InvalidOperationException("Survey not found");
 
+        if (request.TokenCount > 10_000)
+            throw new InvalidOperationException("Token count cannot exceed 10,000");
+
         survey.Status = SurveyStatus.Active;
         await _repo.UpdateAsync(survey, ct);
 
+        var secret = _protector.Unprotect(survey.BatchSecret);
         var tokens = Enumerable.Range(0, request.TokenCount)
-            .Select(_ => _tokenService.GenerateToken(survey.BatchSecret))
+            .Select(_ => _tokenService.GenerateToken(secret))
             .ToList();
 
         return new PublishSurveyResult(survey.Id, tokens);

@@ -20,6 +20,7 @@ public class SurveyEndpointTests : IClassFixture<CandourApiFactory>, IDisposable
     {
         _factory = factory;
         _client = factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-Api-Key", "test-api-key-for-integration-tests");
     }
 
     public void Dispose()
@@ -232,6 +233,15 @@ public class SurveyEndpointTests : IClassFixture<CandourApiFactory>, IDisposable
             submitRequest);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CreateSurvey_Returns401_WithoutApiKey()
+    {
+        using var noAuthClient = _factory.CreateClient();
+        var request = MakeCreateRequest("No Auth Test");
+        var response = await noAuthClient.PostAsJsonAsync("/api/surveys", request);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

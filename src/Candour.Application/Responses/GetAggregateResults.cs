@@ -1,5 +1,6 @@
 namespace Candour.Application.Responses;
 
+using System.Security.Cryptography;
 using System.Text.Json;
 using Candour.Core.Interfaces;
 using Candour.Core.ValueObjects;
@@ -93,9 +94,9 @@ public class GetAggregateResultsHandler : IRequestHandler<GetAggregateResultsQue
             if (ratings.Count > 0)
                 aggregate.AverageRating = ratings.Average();
 
-            // Shuffle free text answers to prevent ordering correlation
-            var rng = new Random();
-            aggregate.FreeTextAnswers = aggregate.FreeTextAnswers.OrderBy(_ => rng.Next()).ToList();
+            // Shuffle free text answers to prevent ordering correlation (CSPRNG)
+            aggregate.FreeTextAnswers = aggregate.FreeTextAnswers
+                .OrderBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue)).ToList();
 
             questionAggregates.Add(aggregate);
         }

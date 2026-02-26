@@ -38,16 +38,21 @@ public class BlindTokenServiceTests
     }
 
     [Fact]
-    public void GenerateToken_ReturnsBase64Of32Bytes()
+    public void GenerateToken_ReturnsCompoundFormat()
     {
-        using var ctx = CreateContext(nameof(GenerateToken_ReturnsBase64Of32Bytes));
+        using var ctx = CreateContext(nameof(GenerateToken_ReturnsCompoundFormat));
         var service = new BlindTokenService(ctx);
         var secret = service.GenerateBatchSecret();
 
         var token = service.GenerateToken(secret);
 
-        var decoded = Convert.FromBase64String(token);
-        Assert.Equal(32, decoded.Length);
+        var parts = token.Split('.');
+        Assert.Equal(2, parts.Length);
+
+        var nonce = Convert.FromBase64String(parts[0]);
+        var hmac = Convert.FromBase64String(parts[1]);
+        Assert.Equal(16, nonce.Length); // 128-bit CSPRNG nonce
+        Assert.Equal(32, hmac.Length); // HMAC-SHA256 output
     }
 
     [Fact]
@@ -101,9 +106,9 @@ public class BlindTokenServiceTests
     }
 
     [Fact]
-    public void ValidateToken_AcceptsValidBase64Of32Bytes()
+    public void ValidateToken_AcceptsGeneratedToken()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_AcceptsValidBase64Of32Bytes));
+        using var ctx = CreateContext(nameof(ValidateToken_AcceptsGeneratedToken));
         var service = new BlindTokenService(ctx);
         var secret = service.GenerateBatchSecret();
         var token = service.GenerateToken(secret);
@@ -126,15 +131,53 @@ public class BlindTokenServiceTests
     }
 
     [Fact]
-    public void ValidateToken_RejectsWrongLengthBase64()
+    public void ValidateToken_RejectsTamperedHmac()
     {
-        using var ctx = CreateContext(nameof(ValidateToken_RejectsWrongLengthBase64));
+        using var ctx = CreateContext(nameof(ValidateToken_RejectsTamperedHmac));
         var service = new BlindTokenService(ctx);
         var secret = service.GenerateBatchSecret();
-        // 16 bytes instead of 32
-        var shortToken = Convert.ToBase64String(new byte[16]);
+        var token = service.GenerateToken(secret);
 
-        var isValid = service.ValidateToken(shortToken, secret);
+        // Tamper with the HMAC part
+        var parts = token.Split('.');
+        var hmacBytes = Convert.FromBase64String(parts[1]);
+        hmacBytes[0] ^= 0xFF; // flip bits in first byte
+        var tampered = parts[0] + "." + Convert.ToBase64String(hmacBytes);
+
+        var isValid = service.ValidateToken(tampered, secret);
+
+        Assert.False(isValid);
+    }
+
+    [Fact]
+    public void ValidateToken_RejectsTokenWithWrongSecret()
+    {
+        using var ctx = CreateContext(nameof(ValidateToken_RejectsTokenWithWrongSecret));
+        var service = new BlindTokenService(ctx);
+        var secret1 = service.GenerateBatchSecret();
+        var secret2 = service.GenerateBatchSecret();
+        var token = service.GenerateToken(secret1);
+
+        var isValid = service.ValidateToken(token, secret2);
+
+        Assert.False(isValid);
+    }
+
+    [Fact]
+    public void ValidateToken_RejectsTamperedNonce()
+    {
+        using var ctx = CreateContext(nameof(ValidateToken_RejectsTamperedNonce));
+        var service = new BlindTokenService(ctx);
+        var secret = service.GenerateBatchSecret();
+        var token = service.GenerateToken(secret);
+
+        // Tamper with the nonce part
+        var parts = token.Split('.');
+        var nonceBytes = Convert.FromBase64String(parts[0]);
+        nonceBytes[0] ^= 0xFF; // flip bits in first byte
+        var tampered = Convert.ToBase64String(nonceBytes) + "." + parts[1];
+
+        var isValid = service.ValidateToken(tampered, secret);
 
         Assert.False(isValid);
     }

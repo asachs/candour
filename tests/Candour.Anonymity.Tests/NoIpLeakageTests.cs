@@ -48,6 +48,96 @@ public class NoIpLeakageTests
     }
 
     [Fact]
+    public async Task AnonymityMiddleware_StripsIpHeaders_OnResultsRoute()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/surveys/123/results";
+        context.Request.Headers["X-Forwarded-For"] = "192.168.1.1";
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+
+        var middleware = new AnonymityMiddleware(
+            next: (ctx) => Task.CompletedTask,
+            logger: NullLogger<AnonymityMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.False(context.Request.Headers.ContainsKey("X-Forwarded-For"));
+        Assert.Equal(IPAddress.None, context.Connection.RemoteIpAddress);
+    }
+
+    [Fact]
+    public async Task AnonymityMiddleware_StripsIpHeaders_OnGetSurveyRoute()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/surveys/some-guid-here";
+        context.Request.Headers["X-Forwarded-For"] = "192.168.1.1";
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+
+        var middleware = new AnonymityMiddleware(
+            next: (ctx) => Task.CompletedTask,
+            logger: NullLogger<AnonymityMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.False(context.Request.Headers.ContainsKey("X-Forwarded-For"));
+        Assert.Equal(IPAddress.None, context.Connection.RemoteIpAddress);
+    }
+
+    [Fact]
+    public async Task AnonymityMiddleware_DoesNotStrip_OnListSurveysRoute()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/surveys";
+        context.Request.Headers["X-Forwarded-For"] = "192.168.1.1";
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+
+        var middleware = new AnonymityMiddleware(
+            next: (ctx) => Task.CompletedTask,
+            logger: NullLogger<AnonymityMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.True(context.Request.Headers.ContainsKey("X-Forwarded-For"));
+        Assert.Equal(IPAddress.Parse("192.168.1.1"), context.Connection.RemoteIpAddress);
+    }
+
+    [Fact]
+    public async Task AnonymityMiddleware_DoesNotStrip_OnPublishRoute()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/surveys/some-guid/publish";
+        context.Request.Headers["X-Forwarded-For"] = "192.168.1.1";
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+
+        var middleware = new AnonymityMiddleware(
+            next: (ctx) => Task.CompletedTask,
+            logger: NullLogger<AnonymityMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.True(context.Request.Headers.ContainsKey("X-Forwarded-For"));
+        Assert.Equal(IPAddress.Parse("192.168.1.1"), context.Connection.RemoteIpAddress);
+    }
+
+    [Fact]
+    public async Task AnonymityMiddleware_DoesNotStrip_OnAnalyzeRoute()
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/surveys/some-guid/analyze";
+        context.Request.Headers["X-Forwarded-For"] = "192.168.1.1";
+        context.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
+
+        var middleware = new AnonymityMiddleware(
+            next: (ctx) => Task.CompletedTask,
+            logger: NullLogger<AnonymityMiddleware>.Instance);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.True(context.Request.Headers.ContainsKey("X-Forwarded-For"));
+        Assert.Equal(IPAddress.Parse("192.168.1.1"), context.Connection.RemoteIpAddress);
+    }
+
+    [Fact]
     public async Task AnonymityMiddleware_DoesNotStrip_OnAdminRoutes()
     {
         var context = new DefaultHttpContext();

@@ -237,12 +237,10 @@ public class EntityDefaultTests
     }
 
     [Fact]
-    public void UsedToken_UsedAt_DefaultsToApproximatelyUtcNow()
+    public void UsedToken_HasNoUsedAtProperty()
     {
-        var before = DateTime.UtcNow;
-        var token = new UsedToken();
-        var after = DateTime.UtcNow;
-
-        Assert.InRange(token.UsedAt, before, after);
+        // UsedAt was removed to prevent timing-based de-anonymization (M1 fix)
+        var properties = typeof(UsedToken).GetProperties();
+        Assert.DoesNotContain(properties, p => p.Name == "UsedAt");
     }
 }

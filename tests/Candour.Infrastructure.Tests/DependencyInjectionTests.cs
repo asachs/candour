@@ -134,4 +134,17 @@ public class DependencyInjectionTests
 
         Assert.Same(services, result);
     }
+
+    [Fact]
+    public void AddInfrastructure_RegistersBatchSecretProtector()
+    {
+        var services = new ServiceCollection();
+        services.AddInfrastructure(BuildConfig());
+
+        var provider = services.BuildServiceProvider();
+        var protector = provider.GetService<IBatchSecretProtector>();
+
+        Assert.NotNull(protector);
+        Assert.IsType<DataProtectionBatchSecretProtector>(protector);
+    }
 }

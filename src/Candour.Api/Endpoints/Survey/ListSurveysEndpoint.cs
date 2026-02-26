@@ -14,8 +14,8 @@ public class ListSurveysEndpoint : EndpointWithoutRequest<List<SurveyDto>>
     public override void Configure()
     {
         Get("surveys");
-        AllowAnonymous();
         Summary(s => s.Summary = "List all surveys");
+        Options(x => x.RequireRateLimiting("general"));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

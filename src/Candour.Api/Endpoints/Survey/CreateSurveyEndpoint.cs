@@ -17,8 +17,8 @@ public class CreateSurveyEndpoint : Endpoint<CreateSurveyRequest, SurveyDto>
     public override void Configure()
     {
         Post("surveys");
-        AllowAnonymous(); // TODO: Require auth for creators
         Summary(s => s.Summary = "Create a new survey");
+        Options(x => x.RequireRateLimiting("general"));
     }
 
     public override async Task HandleAsync(CreateSurveyRequest req, CancellationToken ct)
@@ -26,11 +26,11 @@ public class CreateSurveyEndpoint : Endpoint<CreateSurveyRequest, SurveyDto>
         var command = new CreateSurveyCommand(
             req.Title,
             req.Description,
-            "anonymous-creator", // TODO: Get from auth context
+            HttpContext.User.Identity?.Name ?? "anonymous",
             req.AnonymityThreshold,
             req.TimestampJitterMinutes,
             req.Questions.Select(q => new CreateQuestionItem(
-                Enum.Parse<QuestionType>(q.Type, ignoreCase: true),
+                Enum.TryParse<QuestionType>(q.Type, ignoreCase: true, out var parsedType) ? parsedType : throw new InvalidOperationException($"Invalid question type: {q.Type}"),
                 q.Text,
                 q.Options,
                 q.Required,

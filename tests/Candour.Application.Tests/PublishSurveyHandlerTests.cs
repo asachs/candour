@@ -10,11 +10,12 @@ public class PublishSurveyHandlerTests
 {
     private readonly Mock<ISurveyRepository> _repo = new();
     private readonly Mock<ITokenService> _tokenService = new();
+    private readonly Mock<IBatchSecretProtector> _protector = new();
     private readonly PublishSurveyHandler _handler;
 
     public PublishSurveyHandlerTests()
     {
-        _handler = new PublishSurveyHandler(_repo.Object, _tokenService.Object);
+        _handler = new PublishSurveyHandler(_repo.Object, _tokenService.Object, _protector.Object);
     }
 
     [Fact]
@@ -39,6 +40,7 @@ public class PublishSurveyHandlerTests
         var survey = new Survey { Id = surveyId, Status = SurveyStatus.Draft, BatchSecret = "secret-key" };
         _repo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret-key")).Returns("secret-key");
         _tokenService.Setup(t => t.GenerateToken("secret-key")).Returns("token-1");
 
         // Act
@@ -57,6 +59,7 @@ public class PublishSurveyHandlerTests
         var survey = new Survey { Id = surveyId, Status = SurveyStatus.Draft, BatchSecret = "secret-key" };
         _repo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret-key")).Returns("secret-key");
 
         int callCount = 0;
         _tokenService.Setup(t => t.GenerateToken("secret-key"))
@@ -81,6 +84,7 @@ public class PublishSurveyHandlerTests
         var survey = new Survey { Id = surveyId, Status = SurveyStatus.Draft, BatchSecret = "secret" };
         _repo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(survey);
+        _protector.Setup(p => p.Unprotect("secret")).Returns("secret");
         _tokenService.Setup(t => t.GenerateToken("secret")).Returns("tok");
 
         // Act
@@ -89,5 +93,20 @@ public class PublishSurveyHandlerTests
         // Assert
         Assert.Equal(100, result.Tokens.Count);
         _tokenService.Verify(t => t.GenerateToken("secret"), Times.Exactly(100));
+    }
+
+    [Fact]
+    public async Task Handle_TokenCountExceeds10000_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var surveyId = Guid.NewGuid();
+        var survey = new Survey { Id = surveyId, Status = SurveyStatus.Draft, BatchSecret = "secret" };
+        _repo.Setup(r => r.GetByIdAsync(surveyId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(survey);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _handler.Handle(new PublishSurveyCommand(surveyId, 10_001), CancellationToken.None));
+        Assert.Equal("Token count cannot exceed 10,000", ex.Message);
     }
 }

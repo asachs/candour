@@ -1,7 +1,11 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using Candour.Api.Auth;
 using Candour.Api.Middleware;
 using Candour.Application;
 using Candour.Infrastructure;
 using FastEndpoints;
+using Microsoft.AspNetCore.Authentication;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -26,10 +30,34 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddFastEndpoints();
 builder.Services.AddOpenApi();
 
+// Authentication
+builder.Services.AddAuthentication("ApiKey")
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
+builder.Services.AddAuthorization();
+
+// Rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+    options.AddFixedWindowLimiter("general", opt =>
+    {
+        opt.PermitLimit = 60;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+    options.AddFixedWindowLimiter("submit", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+    });
+});
+
 var app = builder.Build();
 
 // Anonymity middleware FIRST -- before any handler can access IP
 app.UseMiddleware<AnonymityMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 app.UseFastEndpoints(c =>
 {
@@ -37,8 +65,11 @@ app.UseFastEndpoints(c =>
     c.Serializer.Options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
 
-app.MapOpenApi();
-app.MapScalarApiReference();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.Run();
 

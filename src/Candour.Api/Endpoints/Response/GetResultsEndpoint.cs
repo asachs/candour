@@ -14,8 +14,8 @@ public class GetResultsEndpoint : EndpointWithoutRequest<AggregateResultDto>
     public override void Configure()
     {
         Get("surveys/{SurveyId}/results");
-        AllowAnonymous();
         Summary(s => s.Summary = "Get aggregate survey results (threshold-gated)");
+        Options(x => x.RequireRateLimiting("general"));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

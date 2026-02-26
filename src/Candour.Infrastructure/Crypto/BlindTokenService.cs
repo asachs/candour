@@ -22,11 +22,14 @@ public class BlindTokenService : ITokenService
 
     public string GenerateToken(string batchSecret)
     {
-        var nonce = Guid.NewGuid().ToString();
+        var nonce = new byte[16]; // 128-bit CSPRNG nonce
+        RandomNumberGenerator.Fill(nonce);
+
         var keyBytes = Convert.FromBase64String(batchSecret);
         using var hmac = new HMACSHA256(keyBytes);
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(nonce));
-        return Convert.ToBase64String(hash);
+        var mac = hmac.ComputeHash(nonce);
+
+        return Convert.ToBase64String(nonce) + "." + Convert.ToBase64String(mac);
     }
 
     public string HashToken(string token)
@@ -38,11 +41,23 @@ public class BlindTokenService : ITokenService
 
     public bool ValidateToken(string token, string batchSecret)
     {
-        // Token is a valid HMAC-SHA256 output (base64, 32 bytes decoded)
         try
         {
-            var decoded = Convert.FromBase64String(token);
-            return decoded.Length == 32; // SHA256 output is 32 bytes
+            var parts = token.Split('.');
+            if (parts.Length != 2)
+                return false;
+
+            var nonce = Convert.FromBase64String(parts[0]);
+            var providedMac = Convert.FromBase64String(parts[1]);
+
+            if (nonce.Length != 16)
+                return false;
+
+            var keyBytes = Convert.FromBase64String(batchSecret);
+            using var hmac = new HMACSHA256(keyBytes);
+            var computedMac = hmac.ComputeHash(nonce);
+
+            return CryptographicOperations.FixedTimeEquals(computedMac, providedMac);
         }
         catch
         {
@@ -58,8 +73,7 @@ public class BlindTokenService : ITokenService
         _db.UsedTokens.Add(new UsedToken
         {
             TokenHash = tokenHash,
-            SurveyId = surveyId,
-            UsedAt = DateTime.UtcNow
+            SurveyId = surveyId
         });
         await _db.SaveChangesAsync(ct);
     }

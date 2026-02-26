@@ -19,17 +19,20 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
     private readonly IResponseRepository _responseRepo;
     private readonly ITokenService _tokenService;
     private readonly ITimestampJitterService _jitterService;
+    private readonly IBatchSecretProtector _protector;
 
     public SubmitResponseHandler(
         ISurveyRepository surveyRepo,
         IResponseRepository responseRepo,
         ITokenService tokenService,
-        ITimestampJitterService jitterService)
+        ITimestampJitterService jitterService,
+        IBatchSecretProtector protector)
     {
         _surveyRepo = surveyRepo;
         _responseRepo = responseRepo;
         _tokenService = tokenService;
         _jitterService = jitterService;
+        _protector = protector;
     }
 
     public async Task<SubmitResponseResult> Handle(SubmitResponseCommand request, CancellationToken ct)
@@ -42,7 +45,8 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
             return new SubmitResponseResult(false, "Survey is not active");
 
         // Validate and check token
-        if (!_tokenService.ValidateToken(request.Token, survey.BatchSecret))
+        var secret = _protector.Unprotect(survey.BatchSecret);
+        if (!_tokenService.ValidateToken(request.Token, secret))
             return new SubmitResponseResult(false, "Invalid token");
 
         var tokenHash = _tokenService.HashToken(request.Token);

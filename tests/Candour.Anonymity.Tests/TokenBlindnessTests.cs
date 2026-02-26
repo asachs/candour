@@ -27,16 +27,22 @@ public class TokenBlindnessTests
     }
 
     [Fact]
-    public void GenerateToken_ProducesValidHmacSha256Output()
+    public void GenerateToken_ProducesCompoundNonceHmacFormat()
     {
         using var db = CreateInMemoryDb();
         var service = new BlindTokenService(db);
         var secret = service.GenerateBatchSecret();
 
         var token = service.GenerateToken(secret);
-        var decoded = Convert.FromBase64String(token);
+        var parts = token.Split('.');
 
-        Assert.Equal(32, decoded.Length); // HMAC-SHA256 output is 32 bytes
+        Assert.Equal(2, parts.Length);
+
+        var nonce = Convert.FromBase64String(parts[0]);
+        var hmac = Convert.FromBase64String(parts[1]);
+
+        Assert.Equal(16, nonce.Length); // 128-bit CSPRNG nonce
+        Assert.Equal(32, hmac.Length); // HMAC-SHA256 output is 32 bytes
     }
 
     [Fact]
@@ -64,7 +70,7 @@ public class TokenBlindnessTests
 
         var hash = service.HashToken(token);
 
-        // Hash is one-way — cannot contain or derive the original token
+        // Hash is one-way -- cannot contain or derive the original token
         Assert.DoesNotContain(token, hash);
         Assert.NotEqual(token, hash);
     }

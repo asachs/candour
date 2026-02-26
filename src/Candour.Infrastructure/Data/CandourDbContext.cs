@@ -21,7 +21,7 @@ public class CandourDbContext : DbContext
             e.Property(s => s.Title).HasMaxLength(500).IsRequired();
             e.Property(s => s.Description).HasMaxLength(5000);
             e.Property(s => s.Settings).HasColumnType("jsonb");
-            e.Property(s => s.BatchSecret).HasMaxLength(500);
+            e.Property(s => s.BatchSecret).HasMaxLength(1000);
             e.HasMany(s => s.Questions).WithOne(q => q.Survey).HasForeignKey(q => q.SurveyId);
         });
 

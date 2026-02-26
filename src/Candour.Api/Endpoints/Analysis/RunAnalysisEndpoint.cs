@@ -14,8 +14,8 @@ public class RunAnalysisEndpoint : EndpointWithoutRequest<AnalysisReportDto>
     public override void Configure()
     {
         Post("surveys/{SurveyId}/analyze");
-        AllowAnonymous();
         Summary(s => s.Summary = "Run AI analysis on survey results");
+        Options(x => x.RequireRateLimiting("submit"));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

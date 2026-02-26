@@ -17,6 +17,7 @@ public class GetSurveyEndpoint : EndpointWithoutRequest<SurveyDto>
         Get("surveys/{SurveyId}");
         AllowAnonymous();
         Summary(s => s.Summary = "Get a survey by ID");
+        Options(x => x.RequireRateLimiting("general"));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

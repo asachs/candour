@@ -19,8 +19,8 @@ public class PublishSurveyEndpoint : Endpoint<PublishSurveyRequest, SurveyLinkRe
     public override void Configure()
     {
         Post("surveys/{SurveyId}/publish");
-        AllowAnonymous();
         Summary(s => s.Summary = "Publish a survey and generate tokens");
+        Options(x => x.RequireRateLimiting("general"));
     }
 
     public override async Task HandleAsync(PublishSurveyRequest req, CancellationToken ct)

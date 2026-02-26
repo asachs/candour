@@ -16,6 +16,7 @@ public class SubmitResponseEndpoint : Endpoint<SubmitResponseRequest>
         Post("surveys/{SurveyId}/responses");
         AllowAnonymous(); // Respondents never authenticate
         Summary(s => s.Summary = "Submit an anonymous survey response");
+        Options(x => x.RequireRateLimiting("submit"));
     }
 
     public override async Task HandleAsync(SubmitResponseRequest req, CancellationToken ct)

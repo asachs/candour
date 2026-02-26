@@ -26,11 +26,13 @@ public class CreateSurveyHandler : IRequestHandler<CreateSurveyCommand, Survey>
 {
     private readonly ISurveyRepository _repo;
     private readonly ITokenService _tokenService;
+    private readonly IBatchSecretProtector _protector;
 
-    public CreateSurveyHandler(ISurveyRepository repo, ITokenService tokenService)
+    public CreateSurveyHandler(ISurveyRepository repo, ITokenService tokenService, IBatchSecretProtector protector)
     {
         _repo = repo;
         _tokenService = tokenService;
+        _protector = protector;
     }
 
     public async Task<Survey> Handle(CreateSurveyCommand request, CancellationToken ct)
@@ -42,7 +44,7 @@ public class CreateSurveyHandler : IRequestHandler<CreateSurveyCommand, Survey>
             CreatorId = request.CreatorId,
             AnonymityThreshold = request.AnonymityThreshold > 0 ? request.AnonymityThreshold : 5,
             TimestampJitterMinutes = request.TimestampJitterMinutes >= 0 ? request.TimestampJitterMinutes : 10,
-            BatchSecret = _tokenService.GenerateBatchSecret(),
+            BatchSecret = _protector.Protect(_tokenService.GenerateBatchSecret()),
             Questions = request.Questions.Select(q => new Question
             {
                 Type = q.Type,
