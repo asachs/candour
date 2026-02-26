@@ -1,0 +1,22 @@
+========================================
+Journey 7: API Auth Enforcement
+========================================
+
+Test 1: No API key header
+$ curl -s -w "%{http_code}" http://localhost:5219/api/surveys
+→ HTTP 401 Unauthorized
+
+Test 2: Wrong API key
+$ curl -s -w "%{http_code}" -H "X-Api-Key: wrong-key" http://localhost:5219/api/surveys
+→ HTTP 401 Unauthorized
+
+Test 3: Correct API key
+$ curl -s -w "%{http_code}" -H "X-Api-Key: test-secret-key-2026" http://localhost:5219/api/surveys
+→ HTTP 200 OK (returns survey list)
+
+Test 4: POST without auth
+$ curl -s -w "%{http_code}" -X POST http://localhost:5219/api/surveys -H "Content-Type: application/json" -d '{"title":"test"}'
+→ HTTP 401 Unauthorized
+
+CONCLUSION: API correctly returns 401 for missing/invalid API keys
+and 200 for valid key. Auth enforcement is working.

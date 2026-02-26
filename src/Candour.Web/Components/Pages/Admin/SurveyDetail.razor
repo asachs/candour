@@ -19,6 +19,7 @@
     }
     else
     {
+        <div @key="_renderKey">
         <MudText Typo="Typo.h4" GutterBottom="true">@_survey.Title</MudText>
         <MudText Typo="Typo.body1" Class="mb-2">@_survey.Description</MudText>
         <MudChip T="string" Color="@GetStatusColor(_survey.Status)">@_survey.Status</MudChip>
@@ -26,12 +27,11 @@
             Anonymity Threshold: @_survey.AnonymityThreshold | Jitter: ±@_survey.TimestampJitterMinutes min
         </MudText>
 
-        @if (_survey.Status == Core.Enums.SurveyStatus.Draft)
-        {
-            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Publish" Class="mb-4">
-                Publish Survey
-            </MudButton>
-        }
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Publish" Class="mb-4"
+                   Disabled="@(_survey.Status != Core.Enums.SurveyStatus.Draft)"
+                   Style="@(_survey.Status != Core.Enums.SurveyStatus.Draft ? "display:none" : "")">
+            Publish Survey
+        </MudButton>
 
         @if (_publishResult != null)
         {
@@ -42,26 +42,28 @@
                         Share link: <code>/survey/@_survey.Id?t=TOKEN</code>
                     </MudText>
                     <MudText Typo="Typo.body2">Generated @_publishResult.Tokens.Count tokens.</MudText>
-                    <MudExpansionPanels Class="mt-2">
-                        <MudExpansionPanel Text="Show Tokens">
-                            <MudList T="string" Dense="true">
-                                @foreach (var token in _publishResult.Tokens.Take(20))
-                                {
-                                    <MudListItem T="string">
-                                        <MudText Typo="Typo.caption" Style="font-family: monospace;">
-                                            /survey/@_survey.Id?t=@Uri.EscapeDataString(token)
-                                        </MudText>
-                                    </MudListItem>
-                                }
-                                @if (_publishResult.Tokens.Count > 20)
-                                {
-                                    <MudListItem T="string">
-                                        <MudText Typo="Typo.caption">... and @(_publishResult.Tokens.Count - 20) more</MudText>
-                                    </MudListItem>
-                                }
-                            </MudList>
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _showTokens = !_showTokens" Class="mt-2">
+                        @(_showTokens ? "Hide Tokens" : "Show Tokens")
+                    </MudButton>
+                    @if (_showTokens)
+                    {
+                        <MudList T="string" Dense="true" Class="mt-2">
+                            @foreach (var token in _publishResult.Tokens.Take(20))
+                            {
+                                <MudListItem T="string">
+                                    <MudText Typo="Typo.caption" Style="font-family: monospace;">
+                                        /survey/@_survey.Id?t=@Uri.EscapeDataString(token)
+                                    </MudText>
+                                </MudListItem>
+                            }
+                            @if (_publishResult.Tokens.Count > 20)
+                            {
+                                <MudListItem T="string">
+                                    <MudText Typo="Typo.caption">... and @(_publishResult.Tokens.Count - 20) more</MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
                 </MudCardContent>
             </MudCard>
         }
@@ -137,6 +139,7 @@
                 </MudCard>
             }
         }
+        </div>
     }
 </MudContainer>
 
@@ -148,6 +151,8 @@
     private Core.ValueObjects.AggregateData? _results;
     private string? _resultsError;
     private bool _loading = true;
+    private bool _showTokens;
+    private int _renderKey;
 
     protected override async Task OnInitializedAsync()
     {
@@ -167,6 +172,8 @@
     {
         _publishResult = await Mediator.Send(new PublishSurveyCommand(SurveyId));
         _survey = await Mediator.Send(new GetSurveyQuery(SurveyId));
+        // Force full re-render to avoid MudBlazor component ID tracking issue
+        _renderKey++;
     }
 
     private async Task LoadResults()
