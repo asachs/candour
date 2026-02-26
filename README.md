@@ -33,29 +33,80 @@ Existing survey tools promise anonymity through policy — Candour enforces it t
 
 ## Tech Stack
 
-- **.NET 9** with ASP.NET Core
-- **FastEndpoints** for clean API design
-- **Blazor** (Server for respondents, WASM for admin)
-- **PostgreSQL** with EF Core
-- **MediatR** for CQRS
-- **Podman/Docker** for containerized deployment
+- **.NET 9** — Azure Functions (isolated worker) backend, Blazor WebAssembly frontend
+- **Azure Cosmos DB** — document storage
+- **Entra ID** — JWT bearer authentication for admin operations (API key fallback for dev)
+- **MSAL** — Blazor WASM authentication with `AuthorizationMessageHandler`
+- **MediatR** — CQRS command/query separation
+- **MudBlazor** — Material Design component library
 
-## Quick Start
+## Architecture
+
+```
+┌─────────────────────┐     ┌──────────────────────────┐
+│  Blazor WASM (SPA)  │────▶│  Azure Functions (API)   │
+│  - MudBlazor UI     │     │  - AuthenticationMiddleware│
+│  - MSAL / DevAuth   │     │  - AnonymityMiddleware    │
+└─────────────────────┘     │  - MediatR handlers       │
+                            └──────────┬───────────────┘
+                                       │
+                            ┌──────────▼───────────────┐
+                            │  Azure Cosmos DB          │
+                            │  - Surveys, Responses,    │
+                            │    UsedTokens containers  │
+                            └──────────────────────────┘
+```
+
+**Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`) require Entra ID JWT or API key.
+**Respondent routes** (`/api/surveys/{id}`, `.../responses`, `.../results`) are fully anonymous.
+
+## Quick Start (Local Dev)
+
+### Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [Azure Cosmos DB Emulator](https://learn.microsoft.com/en-us/azure/cosmos-db/local-emulator) or a Cosmos DB account
+- [Azure Functions Core Tools v4](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local)
+
+### Run
 
 ```bash
-podman compose up
+# Terminal 1: Start the Functions API
+cd src/Candour.Functions
+func start
+
+# Terminal 2: Start the Blazor WASM frontend
+cd src/Candour.Web
+dotnet run
 ```
 
 Then visit:
-- Survey form: `http://localhost:5000`
+- Frontend: `http://localhost:5000`
 - Admin dashboard: `http://localhost:5000/admin`
-- API docs: `http://localhost:5001/scalar`
+- API: `http://localhost:7071/api/surveys`
+
+Local dev defaults to API key auth (`Candour__Auth__UseEntraId=false`). With an empty API key, admin routes are open for development.
+
+### Run Tests
+
+```bash
+dotnet test
+```
+
+## Deployment
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for full Azure deployment instructions covering:
+- Entra ID app registration
+- Azure infrastructure provisioning
+- Configuration and CORS
+- CI/CD pipeline
+
+## Documentation
+
+- [Deployment Guide](docs/DEPLOY.md) — Azure deployment instructions
+- [Anonymity Architecture](docs/ANONYMITY.md) — threat model and design decisions
+- [User Journeys](docs/USER-JOURNEYS.md) — end-to-end test evidence
 
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
-
-## Documentation
-
-- [Anonymity Architecture](docs/ANONYMITY.md) — threat model and design decisions
-- [API Reference](docs/API.md) — endpoint documentation
