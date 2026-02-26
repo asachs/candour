@@ -16,7 +16,7 @@ public class CreateSurveyEndpoint : Endpoint<CreateSurveyRequest, SurveyDto>
 
     public override void Configure()
     {
-        Post("/api/surveys");
+        Post("surveys");
         AllowAnonymous(); // TODO: Require auth for creators
         Summary(s => s.Summary = "Create a new survey");
     }

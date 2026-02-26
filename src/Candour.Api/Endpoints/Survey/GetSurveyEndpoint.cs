@@ -14,7 +14,7 @@ public class GetSurveyEndpoint : EndpointWithoutRequest<SurveyDto>
 
     public override void Configure()
     {
-        Get("/api/surveys/{SurveyId}");
+        Get("surveys/{SurveyId}");
         AllowAnonymous();
         Summary(s => s.Summary = "Get a survey by ID");
     }

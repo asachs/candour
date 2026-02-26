@@ -13,7 +13,7 @@ public class RunAnalysisEndpoint : EndpointWithoutRequest<AnalysisReportDto>
 
     public override void Configure()
     {
-        Post("/api/surveys/{SurveyId}/analyze");
+        Post("surveys/{SurveyId}/analyze");
         AllowAnonymous();
         Summary(s => s.Summary = "Run AI analysis on survey results");
     }

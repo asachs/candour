@@ -13,7 +13,7 @@ public class SubmitResponseEndpoint : Endpoint<SubmitResponseRequest>
 
     public override void Configure()
     {
-        Post("/api/surveys/{SurveyId}/responses");
+        Post("surveys/{SurveyId}/responses");
         AllowAnonymous(); // Respondents never authenticate
         Summary(s => s.Summary = "Submit an anonymous survey response");
     }

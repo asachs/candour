@@ -33,7 +33,7 @@ app.UseMiddleware<AnonymityMiddleware>();
 
 app.UseFastEndpoints(c =>
 {
-    c.Endpoints.RoutePrefix = "";
+    c.Endpoints.RoutePrefix = "api";
     c.Serializer.Options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
 

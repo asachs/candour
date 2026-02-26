@@ -18,7 +18,7 @@ public class AnonymityMiddleware
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
         // Strip IP info on ALL survey response routes
-        if (path.Contains("/api/responses") || path.Contains("/survey/"))
+        if (path.Contains("/responses") || path.Contains("/survey/"))
         {
             // Remove forwarded headers that could contain IP
             context.Request.Headers.Remove("X-Forwarded-For");
@@ -30,14 +30,15 @@ public class AnonymityMiddleware
 
             // Overwrite connection remote IP
             context.Connection.RemoteIpAddress = IPAddress.None;
+
+            // Register callback to strip Set-Cookie before response headers are sent
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers.Remove("Set-Cookie");
+                return Task.CompletedTask;
+            });
         }
 
         await _next(context);
-
-        // Ensure no cookies set for respondent routes
-        if (path.Contains("/api/responses") || path.Contains("/survey/"))
-        {
-            context.Response.Headers.Remove("Set-Cookie");
-        }
     }
 }

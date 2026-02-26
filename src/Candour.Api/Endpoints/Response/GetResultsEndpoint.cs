@@ -13,7 +13,7 @@ public class GetResultsEndpoint : EndpointWithoutRequest<AggregateResultDto>
 
     public override void Configure()
     {
-        Get("/api/surveys/{SurveyId}/results");
+        Get("surveys/{SurveyId}/results");
         AllowAnonymous();
         Summary(s => s.Summary = "Get aggregate survey results (threshold-gated)");
     }

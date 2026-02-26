@@ -18,7 +18,7 @@ public class PublishSurveyEndpoint : Endpoint<PublishSurveyRequest, SurveyLinkRe
 
     public override void Configure()
     {
-        Post("/api/surveys/{SurveyId}/publish");
+        Post("surveys/{SurveyId}/publish");
         AllowAnonymous();
         Summary(s => s.Summary = "Publish a survey and generate tokens");
     }

@@ -13,7 +13,7 @@ public class ListSurveysEndpoint : EndpointWithoutRequest<List<SurveyDto>>
 
     public override void Configure()
     {
-        Get("/api/surveys");
+        Get("surveys");
         AllowAnonymous();
         Summary(s => s.Summary = "List all surveys");
     }
