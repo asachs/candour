@@ -1,8 +1,22 @@
-# Candour
+<p align="center">
+  <img src="docs/logo.png" alt="Candour Logo" width="200" />
+</p>
 
-> *"Truth needs no name."*
+<h1 align="center">Candour</h1>
 
-**Anonymity-first open source survey tool** built with .NET 9.
+<p align="center">
+  <em>"Truth needs no name."</em>
+</p>
+
+<p align="center">
+  <strong>Anonymity-first open source survey tool</strong> built with .NET 9.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" /></a>
+  <img src="https://img.shields.io/badge/.NET-9.0-purple.svg" alt=".NET 9" />
+  <img src="https://img.shields.io/badge/anonymity-architectural-teal.svg" alt="Architectural Anonymity" />
+</p>
 
 ## Why Candour?
 
