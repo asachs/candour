@@ -7,9 +7,23 @@ using Candour.Infrastructure.Data;
 
 namespace Candour.Api.Tests;
 
-public class CandourApiFactory : WebApplicationFactory<Program>
+public class CandourApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly string _dbName = "TestDb_" + Guid.NewGuid();
+
+    public async Task InitializeAsync()
+    {
+        // Force eager server initialization so the host is fully started
+        // before any test runs. This prevents NullReferenceException in
+        // System.Text.Json when ReadFromJsonAsync races with host startup.
+        using var warmup = CreateClient();
+        await warmup.GetAsync("/api/surveys");
+    }
+
+    async Task IAsyncLifetime.DisposeAsync()
+    {
+        await Task.CompletedTask;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
