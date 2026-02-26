@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 
 public static class DependencyInjection
 {
@@ -26,7 +27,15 @@ public static class DependencyInjection
         services.AddSingleton<ITimestampJitterService, TimestampJitterService>();
 
         // Data Protection for batch secret encryption at rest
-        services.AddDataProtection();
+        // When DataProtectionKeyPath is set, persist keys to a shared directory
+        // so API and Web servers can decrypt each other's payloads
+        var keyPath = configuration.GetValue<string>("Candour:DataProtectionKeyPath");
+        var dp = services.AddDataProtection().SetApplicationName("Candour");
+        if (!string.IsNullOrEmpty(keyPath))
+        {
+            Directory.CreateDirectory(keyPath);
+            dp.PersistKeysToFileSystem(new DirectoryInfo(keyPath));
+        }
         services.AddSingleton<IBatchSecretProtector, DataProtectionBatchSecretProtector>();
 
         // AI (default: disabled)

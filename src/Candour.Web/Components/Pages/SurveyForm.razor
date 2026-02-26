@@ -26,6 +26,10 @@
             Your response cannot be linked back to you. The token has been consumed.
         </MudText>
     }
+    else if (!string.IsNullOrEmpty(_tokenError))
+    {
+        <MudAlert Severity="Severity.Error">@_tokenError</MudAlert>
+    }
     else if (_survey.Status != Core.Enums.SurveyStatus.Active)
     {
         <MudAlert Severity="Severity.Warning">This survey is not currently accepting responses.</MudAlert>
@@ -115,10 +119,23 @@
     private bool _submitted;
     private bool _submitting;
     private string? _error;
+    private string? _tokenError;
 
     protected override async Task OnInitializedAsync()
     {
         _survey = await Mediator.Send(new GetSurveyQuery(SurveyId));
+
+        if (_survey != null && !string.IsNullOrEmpty(Token))
+        {
+            var validation = await Mediator.Send(new ValidateTokenQuery(SurveyId, Token));
+            if (!validation.Valid)
+                _tokenError = validation.Error;
+        }
+        else if (_survey != null && string.IsNullOrEmpty(Token))
+        {
+            _tokenError = "No survey token provided. Use the link given to you.";
+        }
+
         _loading = false;
     }
 
