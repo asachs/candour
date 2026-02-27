@@ -295,6 +295,10 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'Candour__Auth__AdminEmails'
           value: join(adminEmails, ';')
         }
+        {
+          name: 'Candour__FrontendBaseUrl'
+          value: staticWebAppUrl
+        }
       ]
       cors: {
         allowedOrigins: union([

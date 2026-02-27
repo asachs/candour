@@ -6,14 +6,17 @@ using Candour.Shared.Contracts;
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Configuration;
 
 public class PublishSurveyFunction
 {
     private readonly IMediator _mediator;
+    private readonly string? _frontendBaseUrl;
 
-    public PublishSurveyFunction(IMediator mediator)
+    public PublishSurveyFunction(IMediator mediator, IConfiguration configuration)
     {
         _mediator = mediator;
+        _frontendBaseUrl = configuration["Candour:FrontendBaseUrl"]?.TrimEnd('/');
     }
 
     [Function("PublishSurvey")]
@@ -38,7 +41,9 @@ public class PublishSurveyFunction
         var dto = new SurveyLinkResponse
         {
             SurveyId = result.SurveyId,
-            ShareableLink = $"/survey/{result.SurveyId}",
+            ShareableLink = string.IsNullOrEmpty(_frontendBaseUrl)
+                ? $"/survey/{result.SurveyId}"
+                : $"{_frontendBaseUrl}/survey/{result.SurveyId}",
             Tokens = result.Tokens
         };
 

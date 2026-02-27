@@ -123,6 +123,22 @@ Local dev defaults to API key auth (`Candour__Auth__UseEntraId=false`). With an 
 dotnet test
 ```
 
+## Estimated Azure Costs
+
+Candour is designed to run on Azure's serverless and free tiers. At low-to-moderate usage (a few surveys with hundreds of respondents), the monthly cost is near zero.
+
+| Service | SKU | Estimated Monthly Cost |
+|---------|-----|----------------------|
+| **Azure Functions** | Flex Consumption (FC1) | ~$0 (first 1M executions free) |
+| **Cosmos DB** | Serverless | ~$0.25–$1 per 1M RUs consumed |
+| **Static Web Apps** | Free | $0 |
+| **Key Vault** | Standard | ~$0.03 per 10K operations |
+| **Application Insights** | Pay-as-you-go (5 GB/month free) | ~$0 at low volume |
+| **Log Analytics** | Pay-as-you-go (5 GB/month free) | ~$0 at low volume |
+| **Storage Account** | Standard LRS | ~$0.02/GB (Functions runtime only) |
+
+**Realistic estimate for a small deployment:** < $1/month. The serverless architecture means you pay only for actual usage — there are no always-on compute costs.
+
 ## Deployment
 
 See [docs/DEPLOY.md](docs/DEPLOY.md) for full Azure deployment instructions covering:

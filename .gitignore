@@ -37,9 +37,17 @@ Thumbs.db
 
 ## Deployment
 infra/.env
+infra/main.json
 .publish/
 .publish.zip
 .publish-web/
+
+## npx / SWA CLI artifacts
+_npx/
+_cacache/
+_logs/
+_prebuilds/
+_update-notifier-last-checked
 
 ## App specific
 appsettings.Development.json

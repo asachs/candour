@@ -1,6 +1,8 @@
 @page "/admin/survey/{SurveyId:guid}"
 @attribute [Authorize]
 @inject ICandourApiClient Api
+@inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>Survey Details - Candour</PageTitle>
 
@@ -34,28 +36,37 @@
             <MudCard Class="mb-4" Elevation="2">
                 <MudCardContent>
                     <MudText Typo="Typo.h6">Survey Published!</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-2">
-                        Share link: <code>/survey/@_survey.Id?t=TOKEN</code>
-                    </MudText>
                     <MudText Typo="Typo.body2">Generated @_publishResult.Tokens.Count tokens.</MudText>
-                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => _showTokens = !_showTokens" Class="mt-2">
-                        @(_showTokens ? "Hide Tokens" : "Show Tokens")
-                    </MudButton>
+                    <div Class="d-flex gap-2 mt-2">
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _showTokens = !_showTokens">
+                            @(_showTokens ? "Hide Tokens" : "Show Tokens")
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary" OnClick="CopyAllLinks">
+                            Copy All Links
+                        </MudButton>
+                    </div>
                     @if (_showTokens)
                     {
                         <MudList T="string" Dense="true" Class="mt-2">
                             @foreach (var token in _publishResult.Tokens.Take(20))
                             {
+                                var tokenLink = GetTokenLink(token);
                                 <MudListItem T="string">
-                                    <MudText Typo="Typo.caption" Style="font-family: monospace; word-break: break-all;">
-                                        /survey/@_survey.Id?t=@Uri.EscapeDataString(token)
-                                    </MudText>
+                                    <div class="d-flex align-center gap-2">
+                                        <MudText Typo="Typo.caption" Style="font-family: monospace; word-break: break-all; flex: 1;">
+                                            @tokenLink
+                                        </MudText>
+                                        <MudTooltip Text="Copy link">
+                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                                                           OnClick="@(() => CopyToClipboard(tokenLink))" />
+                                        </MudTooltip>
+                                    </div>
                                 </MudListItem>
                             }
                             @if (_publishResult.Tokens.Count > 20)
                             {
                                 <MudListItem T="string">
-                                    <MudText Typo="Typo.caption">... and @(_publishResult.Tokens.Count - 20) more</MudText>
+                                    <MudText Typo="Typo.caption">... and @(_publishResult.Tokens.Count - 20) more (use "Copy All Links" to get all)</MudText>
                                 </MudListItem>
                             }
                         </MudList>
@@ -166,6 +177,25 @@
         _publishResult = await Api.PublishSurveyAsync(SurveyId);
         _survey = await Api.GetSurveyAsync(SurveyId);
         _renderKey++;
+    }
+
+    private string GetTokenLink(string token)
+    {
+        var baseUri = Nav.BaseUri.TrimEnd('/');
+        return $"{baseUri}/survey/{_survey!.Id}?t={Uri.EscapeDataString(token)}";
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+    }
+
+    private async Task CopyAllLinks()
+    {
+        if (_publishResult == null) return;
+        var allLinks = string.Join(Environment.NewLine,
+            _publishResult.Tokens.Select(t => GetTokenLink(t)));
+        await CopyToClipboard(allLinks);
     }
 
     private async Task LoadResults()
