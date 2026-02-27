@@ -1,6 +1,6 @@
 # Candour — User Journey Test Evidence
 
-> End-to-end walkthrough of 7 core user journeys, with evidence captured via browser automation and API testing.
+> End-to-end walkthrough of 9 core user journeys, with evidence captured via browser automation and API testing.
 
 **Date:** 2026-02-27
 **System:** Candour anonymity-first survey platform
@@ -21,12 +21,14 @@
 **Expected:** Teal-themed app bar with "Candour" branding. Hero tagline ("Truth needs no name."), CTA button, how-it-works timeline, and three privacy feature cards with icons.
 
 **Evidence:**
-- ![Home page with new design](screenshots/home-page.png)
+- ![Home page (logged out)](screenshots/home-page.png)
+- ![Home page (authenticated)](screenshots/home-page-authenticated.png)
 
 **Verified:**
 - Teal app bar with Home / Admin / Logout navigation
 - H3 tagline with proper contrast (no longer pink)
-- "Go to Dashboard" CTA (auth-aware — shows "Get Started" when logged out)
+- Auth-aware CTA: "Get Started" (logged out) → "Go to Dashboard" (authenticated)
+- User name ("Andre Sachs") displayed in nav bar when authenticated
 - How It Works timeline: Create → Share → Analyze
 - Privacy by Design cards with Shield, Key, and Lock icons
 
@@ -44,8 +46,8 @@
 3. Observe breadcrumb navigation: Admin > Create Survey
 4. Fill in Title: "Employee Satisfaction Q1 2026"
 5. Fill in Description: "Quarterly anonymous employee satisfaction survey"
-6. Set Anonymity Threshold: 3
-7. Set Timestamp Jitter: 5 minutes
+6. Set Anonymity Threshold: 5
+7. Set Timestamp Jitter: 10 minutes
 8. Add 3 questions:
    - Q1: Multiple Choice — "How satisfied are you with your team?" (Options: Very Satisfied, Satisfied, Neutral, Dissatisfied)
    - Q2: Free Text — "What would improve your work environment?"
@@ -54,11 +56,19 @@
 
 **Expected:** Redirect to `/admin/survey/{id}` showing the created survey in Draft status with breadcrumbs (Admin > Survey Title).
 
-**UI Features:**
+**Evidence:**
+- ![Admin dashboard](screenshots/admin-dashboard.png)
+- ![Survey builder with 3 questions](screenshots/survey-builder.png)
+- ![Created survey in Draft status](screenshots/survey-detail-draft.png)
+
+**Verified:**
+- Admin Dashboard shows survey table with Active status badge, threshold, created date
+- "Create New Survey" button navigates to builder
 - Breadcrumb navigation (Admin > Create Survey)
-- Friendly question type labels (e.g., "Multiple Choice" not "MultipleChoice")
+- Friendly question type labels ("Multiple Choice", "Free Text", "Rating (Stars)", "Matrix (Likert)", "Yes / No")
 - Delete confirmation dialog when removing questions
 - Anonymity Threshold and Timestamp Jitter helper text
+- Created survey shows Draft status with green "Publish Survey" button
 
 ---
 
@@ -77,48 +87,46 @@
 
 **Expected:** Survey status changes to "Active". Token list shows FQDN links in format `https://delightful-forest-005427103.4.azurestaticapps.net/survey/{id}?t=TOKEN`. Each token has an individual copy button. "Copy All Links" copies all URLs to clipboard.
 
-**UI Features:**
+**Evidence:**
+- ![Published survey with 100 tokens](screenshots/survey-published-tokens.png)
+
+**Verified:**
 - Publish button only rendered when status is Draft (no hidden DOM element)
+- Status changes from "Draft" to "Active" after publish
+- "Survey Published!" card shows "Generated 100 tokens"
 - FQDN token links (not relative paths)
-- Per-token copy-to-clipboard button
+- Per-token copy-to-clipboard icon button
 - Bulk "Copy All Links" button for distribution
 - Question options displayed as chips under each question
 
 ---
 
-## Journey 3: Respondent Submits Responses (x3 to meet threshold)
+## Journey 3: Respondent Submits Anonymous Response
 
 **Goal:** Verify respondents can submit anonymous responses using unique tokens without authentication.
 
 **Critical Fix Verified:** The survey form page no longer crashes with `AccessTokenNotAvailableException`. Anonymous respondents use an unauthenticated API client via keyed DI services.
 
-### Respondent 1
-1. Navigate to `/survey/{id}?t={token1}`
-2. Answer Q1: "Very Satisfied" (radio button)
-3. Answer Q2: "More flexible hours would be great" (text area)
-4. Answer Q3: 4 stars (star rating)
-5. Click "Submit Anonymously"
+**Steps:**
+1. Navigate to `/survey/{id}?t={token}`
+2. Select an answer (e.g., "Satisfied" radio button)
+3. Click "Submit Anonymously"
 
-### Respondent 2
-1. Navigate to `/survey/{id}?t={token2}`
-2. Answer Q1: "Satisfied"
-3. Answer Q2: "Better office snacks"
-4. Answer Q3: 3 stars
-5. Click "Submit Anonymously"
+**Expected:** Success message: "Your anonymous response has been recorded" and "Your response cannot be linked back to you. The token has been consumed."
 
-### Respondent 3
-1. Navigate to `/survey/{id}?t={token3}`
-2. Answer Q1: "Neutral"
-3. Answer Q2: "Quieter open office areas"
-4. Answer Q3: 5 stars
-5. Click "Submit Anonymously"
+**Evidence:**
+- ![Survey form with radio buttons](screenshots/survey-form.png)
+- ![Submission success confirmation](screenshots/survey-submitted.png)
+- ![Graceful error on invalid survey](screenshots/survey-form-not-found.png)
 
-**Expected:** Each submission shows success: "Your anonymous response has been recorded" and "Your response cannot be linked back to you. The token has been consumed."
-
-**Evidence (graceful error on invalid survey):**
-- ![Survey form error state](screenshots/survey-form-not-found.png)
-
-This screenshot confirms the C1 fix: navigating to a survey URL without authentication shows a graceful MudBlazor alert ("Survey not found or could not be loaded") instead of crashing with an unhandled `AccessTokenNotAvailableException`.
+**Verified:**
+- Survey loads without authentication (keyed DI fix working)
+- Multiple choice renders as radio buttons with option labels
+- Required fields marked with red asterisk
+- "Submit Anonymously" button in teal
+- Success alert confirms anonymous recording
+- Privacy reassurance: "Your response cannot be linked back to you. The token has been consumed."
+- Invalid survey URL shows graceful MudBlazor error alert (not crash)
 
 ---
 
@@ -133,15 +141,20 @@ This screenshot confirms the C1 fix: navigating to a survey URL without authenti
 2. Click "Load Aggregate Results"
 
 **Expected:** Results show (only accessible to authenticated admin users):
-- Total Responses: 3
-- Q1 (Multiple Choice): Option counts with percentages in a table
-- Q2 (Free Text): Shuffled free text responses in a list
-- Q3 (Rating): Average rating displayed as "X / 5"
+- Total Responses count
+- Option counts with percentages in a table (Multiple Choice / Yes-No)
+- Shuffled free text responses in a list (Free Text)
+- Average rating displayed as "X / 5" (Rating)
 
-**UI Features:**
-- Breadcrumb navigation: Admin > {Survey Title}
-- Results section with MudBlazor tables and lists
-- Shuffled free text responses (anonymity preservation)
+**Evidence:**
+- ![Aggregate results with option counts and percentages](screenshots/aggregate-results.png)
+
+**Verified:**
+- Breadcrumb navigation: Admin > Employee Satisfaction Q1 2026
+- "Total Responses: 2" displayed
+- Results table with Option / Count / Percentage columns
+- Very Satisfied: 1 (50.0%), Satisfied: 1 (50.0%), Neutral: 0 (0.0%), Dissatisfied: 0 (0.0%)
+- Results only accessible after admin authentication
 
 ---
 
@@ -150,12 +163,18 @@ This screenshot confirms the C1 fix: navigating to a survey URL without authenti
 **Goal:** Verify results are gated when response count is below the anonymity threshold.
 
 **Steps:**
-1. Create a new survey with Threshold=10
-2. Publish the survey
-3. Submit only 1 response
-4. Navigate to admin view and click "Load Aggregate Results"
+1. Navigate to admin view of a survey with 0 responses (threshold=1)
+2. Click "Load Aggregate Results"
 
-**Expected:** Warning alert indicating insufficient responses (below the anonymity threshold of 10).
+**Expected:** Warning alert indicating insufficient responses.
+
+**Evidence:**
+- ![Threshold gate warning](screenshots/threshold-gate.png)
+
+**Verified:**
+- Warning alert displayed: "Insufficient responses. Need 1, have 0."
+- No aggregate data exposed when below threshold
+- Results section remains empty — only the warning is shown
 
 ---
 
@@ -211,6 +230,26 @@ Test 5: POST /api/surveys/{id}/validate-token → HTTP 200 {"valid":false,"error
 
 **Evidence:**
 - ![404 page](screenshots/404-page.png)
+
+---
+
+## Screenshot Inventory
+
+| Screenshot | Journey | Description |
+|-----------|---------|-------------|
+| `home-page.png` | J0 | Landing page (logged out) |
+| `home-page-authenticated.png` | J0 | Landing page with auth-aware CTA |
+| `admin-dashboard.png` | J1 | Survey dashboard with table |
+| `survey-builder.png` | J1 | Builder with 3 question types |
+| `survey-detail-draft.png` | J1 | Created survey in Draft status |
+| `survey-detail.png` | J1 | Survey detail with question chips |
+| `survey-published-tokens.png` | J2 | Published with FQDN token links |
+| `survey-form.png` | J3 | Respondent form with radio buttons |
+| `survey-submitted.png` | J3 | Success confirmation |
+| `survey-form-not-found.png` | J3 | Graceful error (C1 fix) |
+| `aggregate-results.png` | J4 | Results table with percentages |
+| `threshold-gate.png` | J5 | Insufficient responses warning |
+| `404-page.png` | J8 | Styled 404 page |
 
 ---
 
