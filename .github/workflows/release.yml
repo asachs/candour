@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet restore
+      - run: dotnet build --no-restore
+      - run: dotnet test --no-build --verbosity normal
+
+  build-functions:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet publish src/Candour.Functions -c Release -o ./publish-functions
+      - name: Zip Functions artifact
+        run: cd publish-functions && zip -r ../candour-functions.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candour-functions
+          path: candour-functions.zip
+
+  build-web:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - run: dotnet publish src/Candour.Web -c Release -o ./publish-web
+      - name: Zip Web artifact
+        run: cd publish-web/wwwroot && zip -r ../../candour-web.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candour-web
+          path: candour-web.zip
+
+  release:
+    needs: [build-functions, build-web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: candour-functions
+      - uses: actions/download-artifact@v4
+        with:
+          name: candour-web
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          # Extract the section for this version from CHANGELOG.md
+          awk "/^## \[${VERSION}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Release ${TAG}" > release-notes.md
+          fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: |
+            candour-functions.zip
+            candour-web.zip
