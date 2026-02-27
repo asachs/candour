@@ -45,4 +45,9 @@ else
 
 builder.Services.AddScoped<ICandourApiClient, CandourApiClient>();
 
+// Public (unauthenticated) API client for anonymous respondent access.
+// SurveyForm uses this to avoid AccessTokenNotAvailableException on public endpoints.
+builder.Services.AddKeyedScoped<ICandourApiClient>("Public", (_, _) =>
+    new CandourApiClient(new HttpClient { BaseAddress = new Uri(apiBaseUrl) }));
+
 await builder.Build().RunAsync();

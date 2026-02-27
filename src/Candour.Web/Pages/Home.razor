@@ -3,18 +3,51 @@
 <PageTitle>Candour - Anonymity-First Surveys</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
-    <MudText Typo="Typo.h6" Color="Color.Secondary" GutterBottom="true">
+    <MudText Typo="Typo.h3" GutterBottom="true">
         <em>"Truth needs no name."</em>
     </MudText>
-    <MudText Typo="Typo.body1" Class="mb-6">
+    <MudText Typo="Typo.h6" Class="mb-4" Style="color:#616161;">
         Anonymity-first survey tool where privacy is enforced by architecture, not by promise.
     </MudText>
 
+    <div class="d-flex gap-3 mb-8">
+        <AuthorizeView>
+            <Authorized>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="/admin">
+                    Go to Dashboard
+                </MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Href="authentication/login">
+                    Get Started
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+
+    <MudText Typo="Typo.h5" Class="mb-4">How It Works</MudText>
+    <MudTimeline TimelinePosition="TimelinePosition.Start" Class="mb-8">
+        <MudTimelineItem Color="Color.Primary" Variant="Variant.Filled">
+            <MudText Typo="Typo.subtitle1"><strong>Create</strong></MudText>
+            <MudText Typo="Typo.body2">Design your survey and set anonymity thresholds.</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem Color="Color.Primary" Variant="Variant.Filled">
+            <MudText Typo="Typo.subtitle1"><strong>Share</strong></MudText>
+            <MudText Typo="Typo.body2">Distribute unique one-time links. No accounts needed for respondents.</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem Color="Color.Primary" Variant="Variant.Filled">
+            <MudText Typo="Typo.subtitle1"><strong>Analyze</strong></MudText>
+            <MudText Typo="Typo.body2">View aggregate results only — individual responses are architecturally unlinkable.</MudText>
+        </MudTimelineItem>
+    </MudTimeline>
+
+    <MudText Typo="Typo.h5" Class="mb-4">Privacy by Design</MudText>
     <MudGrid>
         <MudItem xs="12" md="4">
             <MudCard Elevation="2">
                 <MudCardContent>
-                    <MudText Typo="Typo.h6">Zero PII</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Shield" Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1"><strong>Zero PII</strong></MudText>
                     <MudText Typo="Typo.body2">Response records contain no identity fields. Anonymity is structural.</MudText>
                 </MudCardContent>
             </MudCard>
@@ -22,7 +55,8 @@
         <MudItem xs="12" md="4">
             <MudCard Elevation="2">
                 <MudCardContent>
-                    <MudText Typo="Typo.h6">Blind Tokens</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1"><strong>Blind Tokens</strong></MudText>
                     <MudText Typo="Typo.body2">HMAC-SHA256 prevents duplicates without linking responses to people.</MudText>
                 </MudCardContent>
             </MudCard>
@@ -30,7 +64,8 @@
         <MudItem xs="12" md="4">
             <MudCard Elevation="2">
                 <MudCardContent>
-                    <MudText Typo="Typo.h6">Threshold Gate</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.subtitle1"><strong>Threshold Gate</strong></MudText>
                     <MudText Typo="Typo.body2">Results locked until minimum response count met.</MudText>
                 </MudCardContent>
             </MudCard>

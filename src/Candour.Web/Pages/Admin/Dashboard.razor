@@ -37,12 +37,12 @@
                 </MudTd>
                 <MudTd DataLabel="Threshold">@context.AnonymityThreshold</MudTd>
                 <MudTd DataLabel="Created">@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary"
-                               Href="@($"/admin/survey/{context.Id}")">View</MudButton>
+                <MudTd DataLabel="Actions" Style="text-align:right">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                               Href="@($"/admin/survey/{context.Id}")" StartIcon="@Icons.Material.Filled.Visibility">View</MudButton>
                     @if (context.Status == "Draft")
                     {
-                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Success"
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success" Class="ml-2"
                                    OnClick="@(() => PublishSurvey(context.Id))">Publish</MudButton>
                     }
                 </MudTd>

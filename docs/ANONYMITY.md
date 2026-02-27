@@ -23,11 +23,11 @@ block-beta
     E["Admin-Only Results<br/>Aggregate results require<br/>Entra ID JWT from allowlisted admin"]
   end
 
-  style L1 fill:#e8f5e9,stroke:#2e7d32
-  style L2 fill:#e3f2fd,stroke:#1565c0
-  style L3 fill:#fce4ec,stroke:#c62828
-  style L4 fill:#fff3e0,stroke:#e65100
-  style L5 fill:#f3e5f5,stroke:#6a1b9a
+  style L1 fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+  style L2 fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+  style L3 fill:#fce4ec,stroke:#c62828,color:#b71c1c
+  style L4 fill:#fff3e0,stroke:#e65100,color:#bf360c
+  style L5 fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
 ```
 
 1. **Database breach** — Attacker gains read access to the database. Response records contain zero PII fields, so individual responses cannot be attributed.
@@ -49,17 +49,14 @@ sequenceDiagram
     participant KV as Key Vault
     participant DB as Cosmos DB
 
-    rect rgb(232, 245, 233)
-    Note over Admin,DB: Token Generation (Publish)
+    Note over Admin,DB: 1 · Token Generation (Publish)
     Admin->>API: POST /surveys/{id}/publish
     API->>KV: Generate 256-bit batch secret
     KV-->>API: Batch secret stored
     API->>API: For each recipient:<br/>token = HMAC-SHA256(secret, nonce)
     API-->>Admin: Token URLs:<br/>/survey/{id}?t={token}
-    end
 
-    rect rgb(227, 242, 253)
-    Note over Admin,DB: Response Submission
+    Note over Admin,DB: 2 · Response Submission
     Actor R as Respondent
     Admin->>R: Distribute token URL
     R->>API: POST /surveys/{id}/responses<br/>+ token
@@ -73,12 +70,9 @@ sequenceDiagram
         API-->>R: 409 Conflict — Token consumed
     end
     Note over API: Original token discarded.<br/>SHA256 is one-way.
-    end
 
-    rect rgb(243, 229, 245)
-    Note over Admin,DB: No Link Possible
+    Note over Admin,DB: 3 · No Link Possible
     Note over DB: UsedTokens table<br/>has NO foreign key<br/>to Responses table
-    end
 ```
 
 1. Survey creator publishes — system generates 256-bit batch secret in Key Vault

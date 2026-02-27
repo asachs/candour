@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
+@inject IDialogService DialogService
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -9,14 +10,14 @@
     <MudAppBar Elevation="1" Color="Color.Primary">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                        Edge="Edge.Start" OnClick="ToggleDrawer" Class="d-md-none" />
-        <MudText Typo="Typo.h5" Class="ml-3">Candour</MudText>
+        <MudText Typo="Typo.h6" Class="ml-3">Candour</MudText>
         <MudSpacer />
-        <div class="d-none d-md-flex">
+        <div class="d-none d-md-flex align-center">
             <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">Home</MudButton>
             <AuthorizeView>
                 <Authorized>
                     <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
-                    <MudText Typo="Typo.body2" Class="mx-2 d-flex align-center">@context.User.FindFirst("name")?.Value</MudText>
+                    <MudText Typo="Typo.body2" Class="mx-2 d-flex align-center" Style="opacity:0.85">@context.User.FindFirst("name")?.Value</MudText>
                     <MudButton Href="authentication/logout" Color="Color.Inherit" Variant="Variant.Text">Logout</MudButton>
                 </Authorized>
                 <NotAuthorized>
@@ -25,12 +26,14 @@
             </AuthorizeView>
         </div>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1"
+               Variant="DrawerVariant.Temporary"
+               ClipMode="DrawerClipMode.Never">
         <MudNavMenu>
-            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" OnClick="CloseDrawer">Home</MudNavLink>
             <AuthorizeView>
                 <Authorized>
-                    <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+                    <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings" OnClick="CloseDrawer">Admin</MudNavLink>
                     <MudDivider Class="my-2" />
                     <MudText Typo="Typo.caption" Class="px-4 py-1" Style="opacity:0.7">@context.User.FindFirst("name")?.Value</MudText>
                     <MudNavLink Href="authentication/logout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
@@ -41,7 +44,7 @@
             </AuthorizeView>
         </MudNavMenu>
     </MudDrawer>
-    <MudMainContent Class="pt-16 pa-4 pa-md-6">
+    <MudMainContent Class="pt-20 pa-4 pa-md-6">
         @Body
     </MudMainContent>
 </MudLayout>
@@ -49,4 +52,19 @@
 @code {
     private bool _drawerOpen;
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void CloseDrawer() => _drawerOpen = false;
+
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#00695c",
+            Secondary = "#37474f",
+            AppbarBackground = "#00695c",
+            Surface = "#ffffff",
+            Background = "#fafafa",
+            TextPrimary = "#212121",
+            TextSecondary = "#616161",
+        }
+    };
 }

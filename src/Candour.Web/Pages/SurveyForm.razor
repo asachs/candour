@@ -1,16 +1,15 @@
 @page "/survey/{SurveyId:guid}"
-@inject ICandourApiClient Api
 
 <PageTitle>Survey - Candour</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
     @if (_loading)
     {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="d-flex mx-auto mt-16" />
     }
     else if (_survey == null)
     {
-        <MudAlert Severity="Severity.Error">Survey not found.</MudAlert>
+        <MudAlert Severity="Severity.Error">Survey not found or could not be loaded.</MudAlert>
     }
     else if (_submitted)
     {
@@ -106,6 +105,9 @@
     [Parameter] public Guid SurveyId { get; set; }
     [SupplyParameterFromQuery(Name = "t")] public string? Token { get; set; }
 
+    [Inject(Key = "Public")]
+    private ICandourApiClient Api { get; set; } = null!;
+
     private SurveyDto? _survey;
     private Dictionary<string, string> _answers = new();
     private bool _loading = true;
@@ -116,17 +118,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _survey = await Api.GetSurveyAsync(SurveyId);
+        try
+        {
+            _survey = await Api.GetSurveyAsync(SurveyId);
 
-        if (_survey != null && !string.IsNullOrEmpty(Token))
-        {
-            var validation = await Api.ValidateTokenAsync(SurveyId, Token);
-            if (!validation.Valid)
-                _tokenError = validation.Error;
+            if (_survey != null && !string.IsNullOrEmpty(Token))
+            {
+                var validation = await Api.ValidateTokenAsync(SurveyId, Token);
+                if (!validation.Valid)
+                    _tokenError = validation.Error;
+            }
+            else if (_survey != null && string.IsNullOrEmpty(Token))
+            {
+                _tokenError = "No survey token provided. Use the link given to you.";
+            }
         }
-        else if (_survey != null && string.IsNullOrEmpty(Token))
+        catch (Exception)
         {
-            _tokenError = "No survey token provided. Use the link given to you.";
+            _survey = null;
         }
 
         _loading = false;
