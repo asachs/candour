@@ -15,16 +15,16 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/.NET-9.0-purple.svg" alt=".NET 9" />
-  <img src="https://img.shields.io/badge/anonymity-architectural-teal.svg" alt="Architectural Anonymity" />
+  <img src="https://img.shields.io/badge/anonymity-by_design-teal.svg" alt="Anonymity by Design" />
 </p>
 
 ## Why Candour?
 
-Existing survey tools promise anonymity through policy — Candour enforces it through **architecture**. The data model makes re-identification impossible, not just forbidden.
+Most survey tools treat anonymity as a policy: "we won't store your name." Candour treats it as architecture: the response data model has no identity fields to store.
 
-### Anonymity Guarantees
+### Anonymity by design
 
-- **Zero PII in responses** — Response records contain no identity fields whatsoever
+- **No PII in responses** — Response records contain no identity fields
 - **Blind tokens** — HMAC-SHA256 tokens prevent duplicates without linking responses to respondents
 - **IP stripping** — Middleware removes all IP-related headers before any handler processes the request
 - **Timestamp jitter** — Configurable random offset applied before storage
@@ -125,7 +125,7 @@ dotnet test
 
 ## Estimated Azure Costs
 
-Candour is designed to run on Azure's serverless and free tiers. At low-to-moderate usage (a few surveys with hundreds of respondents), the monthly cost is near zero.
+Candour runs on Azure's serverless and free tiers. At low-to-moderate usage (a few surveys with hundreds of respondents), the monthly cost is minimal.
 
 | Service | SKU | Estimated Monthly Cost |
 |---------|-----|----------------------|
@@ -137,7 +137,7 @@ Candour is designed to run on Azure's serverless and free tiers. At low-to-moder
 | **Log Analytics** | Pay-as-you-go (5 GB/month free) | ~$0 at low volume |
 | **Storage Account** | Standard LRS | ~$0.02/GB (Functions runtime only) |
 
-**Realistic estimate for a small deployment:** < $1/month. The serverless architecture means you pay only for actual usage — there are no always-on compute costs.
+**Small deployment estimate:** < $1/month. No always-on compute — you pay for actual usage only.
 
 ## Deployment
 

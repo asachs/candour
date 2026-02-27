@@ -105,7 +105,7 @@
 
 **Goal:** Verify respondents can submit anonymous responses using unique tokens without authentication.
 
-**Critical Fix Verified:** The survey form page no longer crashes with `AccessTokenNotAvailableException`. Anonymous respondents use an unauthenticated API client via keyed DI services.
+**Note:** Anonymous respondents use an unauthenticated API client via keyed DI services (previously crashed with `AccessTokenNotAvailableException`).
 
 **Steps:**
 1. Navigate to `/survey/{id}?t={token}`

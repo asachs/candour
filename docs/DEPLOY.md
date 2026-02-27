@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Battle-tested, step-by-step instructions for deploying Candour to Azure. This guide reflects real deployment experience including common pitfalls and their solutions.
+Step-by-step instructions for deploying Candour to Azure, including common pitfalls and solutions.
 
 ---
 

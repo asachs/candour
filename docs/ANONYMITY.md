@@ -2,7 +2,7 @@
 
 ## Threat Model
 
-Candour's anonymity design protects against five attack vectors through defence in depth:
+Candour's anonymity design addresses five attack vectors through layered defences:
 
 ```mermaid
 block-beta
@@ -81,11 +81,11 @@ sequenceDiagram
 4. If hash absent — store hash in UsedTokens, store answers in Responses (separate, unlinked)
 5. Original token discarded — SHA256 is one-way
 
-## Key Design Decision: Architectural vs Policy Anonymity
+## Design decision: structural vs policy anonymity
 
-Most survey tools implement anonymity as a configuration option — "don't store identifying info." This is **policy-based** anonymity. A code change, misconfiguration, or database join can defeat it.
+Policy-based anonymity relies on configuration to exclude identity data. A code change, misconfiguration, or database join can defeat it.
 
-Candour implements **architectural** anonymity — the Response entity literally has no fields for identity data. No code change within the normal API surface can add PII to responses without modifying the database schema.
+Candour's Response entity has no fields for identity data. Adding PII to responses requires modifying the database schema — it cannot happen through normal API usage.
 
 ## Access Control
 
@@ -113,4 +113,4 @@ flowchart LR
     style Admin fill:#fce4ec,stroke:#c62828,color:#b71c1c
 ```
 
-Admin authentication requires an Entra ID JWT from an allowlisted email address. This ensures that even aggregate data is only visible to authorized personnel.
+Admin authentication requires an Entra ID JWT from an allowlisted email address. Aggregate data is only visible to authorized admins.
