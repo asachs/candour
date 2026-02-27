@@ -30,6 +30,56 @@ Existing survey tools promise anonymity through policy — Candour enforces it t
 - **Timestamp jitter** — Configurable random offset applied before storage
 - **Threshold gating** — Results only available after minimum response count
 - **Aggregate-only results** — No API endpoint returns individual response data
+- **Admin-only results access** — Aggregate results endpoints require authenticated admin authorization (Entra ID JWT)
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["Client"]
+        BW["Blazor WASM\n(Admin Dashboard)"]
+        RF["Survey Form\n(Respondent)"]
+    end
+
+    subgraph Azure["Azure"]
+        subgraph SWA["Static Web Apps"]
+            BW
+            RF
+        end
+
+        subgraph Functions["Azure Functions (Flex Consumption)"]
+            AUTH["Auth Middleware\nEntra ID JWT + Admin Allowlist"]
+            ANON["Anonymity Middleware\nIP Stripping"]
+            API["API Endpoints\nMediatR CQRS"]
+        end
+
+        subgraph Data["Data & Security"]
+            COSMOS[("Cosmos DB\n(Serverless)")]
+            KV["Key Vault\nBatch Secrets (RSA)"]
+            AI["App Insights"]
+        end
+
+        ENTRA["Entra ID\n(Authentication)"]
+    end
+
+    BW -->|"Entra ID JWT"| AUTH
+    RF -->|"Blind Token"| ANON
+    AUTH --> API
+    ANON --> API
+    API --> COSMOS
+    API --> KV
+    API --> AI
+    BW -.->|"MSAL Login"| ENTRA
+    ENTRA -.->|"JWT"| BW
+
+    style Client fill:#e8f5e9,stroke:#2e7d32
+    style Functions fill:#e3f2fd,stroke:#1565c0
+    style Data fill:#fff3e0,stroke:#e65100
+    style SWA fill:#e8f5e9,stroke:#2e7d32
+```
+
+**Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`) require Entra ID JWT or API key.
+**Respondent routes** (`/api/surveys/{id}`, `.../responses`) are fully anonymous.
 
 ## Tech Stack
 
@@ -39,26 +89,6 @@ Existing survey tools promise anonymity through policy — Candour enforces it t
 - **MSAL** — Blazor WASM authentication with `AuthorizationMessageHandler`
 - **MediatR** — CQRS command/query separation
 - **MudBlazor** — Material Design component library
-
-## Architecture
-
-```
-┌─────────────────────┐     ┌──────────────────────────┐
-│  Blazor WASM (SPA)  │────▶│  Azure Functions (API)   │
-│  - MudBlazor UI     │     │  - AuthenticationMiddleware│
-│  - MSAL / DevAuth   │     │  - AnonymityMiddleware    │
-└─────────────────────┘     │  - MediatR handlers       │
-                            └──────────┬───────────────┘
-                                       │
-                            ┌──────────▼───────────────┐
-                            │  Azure Cosmos DB          │
-                            │  - Surveys, Responses,    │
-                            │    UsedTokens containers  │
-                            └──────────────────────────┘
-```
-
-**Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`) require Entra ID JWT or API key.
-**Respondent routes** (`/api/surveys/{id}`, `.../responses`, `.../results`) are fully anonymous.
 
 ## Quick Start (Local Dev)
 

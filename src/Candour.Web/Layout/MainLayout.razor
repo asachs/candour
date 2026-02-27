@@ -16,6 +16,7 @@
             <AuthorizeView>
                 <Authorized>
                     <MudButton Href="/admin" Color="Color.Inherit" Variant="Variant.Text">Admin</MudButton>
+                    <MudText Typo="Typo.body2" Class="mx-2 d-flex align-center">@context.User.FindFirst("name")?.Value</MudText>
                     <MudButton Href="authentication/logout" Color="Color.Inherit" Variant="Variant.Text">Logout</MudButton>
                 </Authorized>
                 <NotAuthorized>
@@ -30,6 +31,8 @@
             <AuthorizeView>
                 <Authorized>
                     <MudNavLink Href="/admin" Icon="@Icons.Material.Filled.AdminPanelSettings">Admin</MudNavLink>
+                    <MudDivider Class="my-2" />
+                    <MudText Typo="Typo.caption" Class="px-4 py-1" Style="opacity:0.7">@context.User.FindFirst("name")?.Value</MudText>
                     <MudNavLink Href="authentication/logout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
                 </Authorized>
                 <NotAuthorized>

@@ -14,9 +14,10 @@ public partial class AuthenticationMiddleware : IFunctionsWorkerMiddleware
     private readonly IJwtTokenValidator _jwtValidator;
     private readonly IConfiguration _configuration;
     private readonly bool _useEntraId;
+    private readonly HashSet<string> _adminEmails;
 
-    // Admin routes: /api/surveys (list+create), /api/surveys/{id}/publish, /api/surveys/{id}/analyze
-    [GeneratedRegex(@"^/api/surveys(?:/[^/]+/(?:publish|analyze))?$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    // Admin routes: /api/surveys (list+create), /api/surveys/{id}/publish, /api/surveys/{id}/analyze, /api/surveys/{id}/results
+    [GeneratedRegex(@"^/api/surveys(?:/[^/]+/(?:publish|analyze|results))?$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex AdminRoutePattern();
 
     public AuthenticationMiddleware(IJwtTokenValidator jwtValidator, IConfiguration configuration)
@@ -24,6 +25,11 @@ public partial class AuthenticationMiddleware : IFunctionsWorkerMiddleware
         _jwtValidator = jwtValidator;
         _configuration = configuration;
         _useEntraId = configuration.GetValue<bool>("Candour:Auth:UseEntraId");
+
+        var emails = configuration["Candour:Auth:AdminEmails"] ?? "";
+        _adminEmails = new HashSet<string>(
+            emails.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
@@ -61,6 +67,13 @@ public partial class AuthenticationMiddleware : IFunctionsWorkerMiddleware
                 return;
             }
 
+            if (_adminEmails.Count > 0 && !IsAdminUser(principal))
+            {
+                var response = requestData.CreateResponse(HttpStatusCode.Forbidden);
+                context.GetInvocationResult().Value = response;
+                return;
+            }
+
             context.Items["User"] = principal;
         }
         else
@@ -75,6 +88,15 @@ public partial class AuthenticationMiddleware : IFunctionsWorkerMiddleware
         }
 
         await next(context);
+    }
+
+    private bool IsAdminUser(ClaimsPrincipal principal)
+    {
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value
+            ?? principal.FindFirst("preferred_username")?.Value
+            ?? principal.FindFirst(ClaimTypes.Upn)?.Value;
+
+        return email != null && _adminEmails.Contains(email);
     }
 
     private async Task<ClaimsPrincipal?> ValidateBearerToken(HttpRequestData request)

@@ -35,6 +35,12 @@ bld/
 .DS_Store
 Thumbs.db
 
+## Deployment
+infra/.env
+.publish/
+.publish.zip
+.publish-web/
+
 ## App specific
 appsettings.Development.json
 appsettings.Local.json

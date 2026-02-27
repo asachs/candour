@@ -86,13 +86,14 @@ Note: Three responses were submitted (via browser and API) to meet the anonymity
 
 ## Journey 4: Admin Views Aggregate Results
 
-**Goal:** Verify aggregate results display correctly after threshold is met.
+**Goal:** Verify aggregate results display correctly after threshold is met and require admin authentication.
 
 **Steps:**
-1. Navigate to `/admin/survey/{id}`
-2. Click "Load Aggregate Results"
+1. Log in via Entra ID as an admin-allowlisted user
+2. Navigate to `/admin/survey/{id}`
+3. Click "Load Aggregate Results"
 
-**Expected:** Results show:
+**Expected:** Results show (only accessible to authenticated admin users):
 - Total Responses: 3
 - Q1 (MultipleChoice): Option counts and percentages
 - Q2 (FreeText): Shuffled free text responses
@@ -144,8 +145,9 @@ Note: Three responses were submitted (via browser and API) to meet the anonymity
 1. Configure API key in appsettings
 2. Send `POST /api/surveys` without `X-Api-Key` header
 3. Send `POST /api/surveys` with wrong `X-Api-Key` header
+4. Send `GET /api/surveys/{id}/results` without auth header
 
-**Expected:** Both requests return `401 Unauthorized`.
+**Expected:** All unauthenticated requests return `401 Unauthorized`.
 
 **Evidence:**
 - [API auth test results](screenshots/j7-api-auth.txt)
@@ -155,4 +157,5 @@ Test 1: No API key     → HTTP 401 Unauthorized
 Test 2: Wrong API key  → HTTP 401 Unauthorized
 Test 3: Correct key    → HTTP 200 OK
 Test 4: POST no auth   → HTTP 401 Unauthorized
+Test 5: GET results no auth → HTTP 401 Unauthorized
 ```
