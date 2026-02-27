@@ -48,6 +48,7 @@ _cacache/
 _logs/
 _prebuilds/
 _update-notifier-last-checked
+node_modules/
 
 ## App specific
 appsettings.Development.json
