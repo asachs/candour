@@ -8,19 +8,19 @@ Candour's anonymity design protects against five attack vectors through defence 
 block-beta
   columns 1
   block:L1["Layer 1: Network"]
-    A["IP Stripping\nAnonymityMiddleware removes all\nIP-related headers before processing"]
+    A["IP Stripping<br/>AnonymityMiddleware removes all<br/>IP-related headers before processing"]
   end
   block:L2["Layer 2: Application"]
-    B["Log Sanitisation\nSerilog policy excludes request bodies,\nIPs, and user agents from all output"]
+    B["Log Sanitisation<br/>Serilog policy excludes request bodies,<br/>IPs, and user agents from all output"]
   end
   block:L3["Layer 3: Data Model"]
-    C["Zero PII\nResponse entity has no identity fields.\nNo FK between UsedTokens and Responses"]
+    C["Zero PII<br/>Response entity has no identity fields.<br/>No FK between UsedTokens and Responses"]
   end
   block:L4["Layer 4: Temporal"]
-    D["Timestamp Jitter\nConfigurable random offset\napplied before storage"]
+    D["Timestamp Jitter<br/>Configurable random offset<br/>applied before storage"]
   end
   block:L5["Layer 5: Access"]
-    E["Admin-Only Results\nAggregate results require\nEntra ID JWT from allowlisted admin"]
+    E["Admin-Only Results<br/>Aggregate results require<br/>Entra ID JWT from allowlisted admin"]
   end
 
   style L1 fill:#e8f5e9,stroke:#2e7d32
@@ -101,18 +101,18 @@ Aggregate results are only accessible to authenticated admin users. The API enfo
 flowchart LR
     subgraph Public["Public (No Auth Required)"]
         direction TB
-        A["GET /surveys/{id}\nView survey questions"]
-        B["POST /surveys/{id}/responses\nSubmit response"]
-        C["POST /surveys/{id}/validate-token\nCheck token validity"]
+        A["GET /surveys/{id}<br/>View survey questions"]
+        B["POST /surveys/{id}/responses<br/>Submit response"]
+        C["POST /surveys/{id}/validate-token<br/>Check token validity"]
     end
 
     subgraph Admin["Admin Only (Entra ID JWT)"]
         direction TB
-        D["GET /surveys\nList all surveys"]
-        E["POST /surveys\nCreate survey"]
-        F["POST /surveys/{id}/publish\nPublish + generate tokens"]
-        G["POST /surveys/{id}/analyze\nRun AI analysis"]
-        H["GET /surveys/{id}/results\nView aggregate results"]
+        D["GET /surveys<br/>List all surveys"]
+        E["POST /surveys<br/>Create survey"]
+        F["POST /surveys/{id}/publish<br/>Publish + generate tokens"]
+        G["POST /surveys/{id}/analyze<br/>Run AI analysis"]
+        H["GET /surveys/{id}/results<br/>View aggregate results"]
     end
 
     style Public fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20

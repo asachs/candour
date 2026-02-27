@@ -37,8 +37,8 @@ Existing survey tools promise anonymity through policy — Candour enforces it t
 ```mermaid
 flowchart TB
     subgraph Client["Client"]
-        BW["Blazor WASM\n(Admin Dashboard)"]
-        RF["Survey Form\n(Respondent)"]
+        BW["Blazor WASM<br/>(Admin Dashboard)"]
+        RF["Survey Form<br/>(Respondent)"]
     end
 
     subgraph Azure["Azure"]
@@ -48,18 +48,18 @@ flowchart TB
         end
 
         subgraph Functions["Azure Functions (Flex Consumption)"]
-            AUTH["Auth Middleware\nEntra ID JWT + Admin Allowlist"]
-            ANON["Anonymity Middleware\nIP Stripping"]
-            API["API Endpoints\nMediatR CQRS"]
+            AUTH["Auth Middleware<br/>Entra ID JWT + Admin Allowlist"]
+            ANON["Anonymity Middleware<br/>IP Stripping"]
+            API["API Endpoints<br/>MediatR CQRS"]
         end
 
         subgraph Data["Data & Security"]
-            COSMOS[("Cosmos DB\n(Serverless)")]
-            KV["Key Vault\nBatch Secrets (RSA)"]
+            COSMOS[("Cosmos DB<br/>(Serverless)")]
+            KV["Key Vault<br/>Batch Secrets (RSA)"]
             AI["App Insights"]
         end
 
-        ENTRA["Entra ID\n(Authentication)"]
+        ENTRA["Entra ID<br/>(Authentication)"]
     end
 
     BW -->|"Entra ID JWT"| AUTH
@@ -79,7 +79,7 @@ flowchart TB
 ```
 
 **Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`) require Entra ID JWT or API key.
-**Respondent routes** (`/api/surveys/{id}`, `.../responses`) are fully anonymous.
+**Public routes** (`/api/surveys/{id}`, `.../validate-token`) are unauthenticated. Response submission (`POST .../responses`) uses blind tokens for anonymous access.
 
 ## Tech Stack
 
