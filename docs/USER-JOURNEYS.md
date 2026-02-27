@@ -5,8 +5,8 @@
 **Date:** 2026-02-27
 **System:** Candour anonymity-first survey platform
 **Infra:** Azure Functions (Flex Consumption), Azure Cosmos DB (Serverless), Azure Static Web Apps
-**Frontend:** https://delightful-forest-005427103.4.azurestaticapps.net
-**API:** https://func-candour-waf2pjwfujduu.azurewebsites.net
+**Frontend:** https://app.candour.example
+**API:** https://api.candour.example
 
 ---
 
@@ -28,7 +28,7 @@
 - Teal app bar with Home / Admin / Logout navigation
 - H3 tagline with proper contrast (no longer pink)
 - Auth-aware CTA: "Get Started" (logged out) → "Go to Dashboard" (authenticated)
-- User name ("Andre Sachs") displayed in nav bar when authenticated
+- User name displayed in nav bar when authenticated
 - How It Works timeline: Create → Share → Analyze
 - Privacy by Design cards with Shield, Key, and Lock icons
 
@@ -85,7 +85,7 @@
 4. Expand "Show Tokens" panel
 5. Use "Copy All Links" to copy all token URLs
 
-**Expected:** Survey status changes to "Active". Token list shows FQDN links in format `https://delightful-forest-005427103.4.azurestaticapps.net/survey/{id}?t=TOKEN`. Each token has an individual copy button. "Copy All Links" copies all URLs to clipboard.
+**Expected:** Survey status changes to "Active". Token list shows FQDN links in format `https://app.candour.example/survey/{id}?t=TOKEN`. Each token has an individual copy button. "Copy All Links" copies all URLs to clipboard.
 
 **Evidence:**
 - ![Published survey with 100 tokens](screenshots/survey-published-tokens.png)
@@ -151,9 +151,9 @@
 
 **Verified:**
 - Breadcrumb navigation: Admin > Employee Satisfaction Q1 2026
-- "Total Responses: 2" displayed
+- "Total Responses: 4" displayed
 - Results table with Option / Count / Percentage columns
-- Very Satisfied: 1 (50.0%), Satisfied: 1 (50.0%), Neutral: 0 (0.0%), Dissatisfied: 0 (0.0%)
+- Very Satisfied: 1 (25.0%), Satisfied: 3 (75.0%), Neutral: 0 (0.0%), Dissatisfied: 0 (0.0%)
 - Results only accessible after admin authentication
 
 ---
@@ -163,7 +163,7 @@
 **Goal:** Verify results are gated when response count is below the anonymity threshold.
 
 **Steps:**
-1. Navigate to admin view of a survey with 0 responses (threshold=1)
+1. Navigate to admin view of a survey with 1 response (threshold=5)
 2. Click "Load Aggregate Results"
 
 **Expected:** Warning alert indicating insufficient responses.
@@ -172,7 +172,7 @@
 - ![Threshold gate warning](screenshots/threshold-gate.png)
 
 **Verified:**
-- Warning alert displayed: "Insufficient responses. Need 1, have 0."
+- Warning alert displayed: "Insufficient responses. Need 5, have 1."
 - No aggregate data exposed when below threshold
 - Results section remains empty — only the warning is shown
 
@@ -251,26 +251,3 @@ Test 5: POST /api/surveys/{id}/validate-token → HTTP 200 {"valid":false,"error
 | `threshold-gate.png` | J5 | Insufficient responses warning |
 | `404-page.png` | J8 | Styled 404 page |
 
----
-
-## Design Review Summary (v0.3.0)
-
-The following issues from the UX/UI design review have been resolved:
-
-| # | Severity | Issue | Status |
-|---|----------|-------|--------|
-| C1 | CRITICAL | Survey page crash for anonymous users | Fixed — keyed DI for public HttpClient |
-| C2 | CRITICAL | Pink tagline fails WCAG AA contrast | Fixed — dark text on white, h3 typography |
-| M1 | MAJOR | Content hidden behind app bar | Fixed — pt-20 padding |
-| M2 | MAJOR | Redundant sidebar on desktop | Fixed — temporary drawer, mobile only |
-| M3 | MAJOR | Plain loading screen | Fixed — branded CSS spinner |
-| M4 | MAJOR | Home page lacks CTA | Fixed — CTA, timeline, icons |
-| M5 | MAJOR | No custom theme, Bootstrap conflicts | Fixed — teal theme, Bootstrap removed |
-| M6 | MAJOR | Broken heading hierarchy | Fixed — proper h1-h6 ordering |
-| m1 | MINOR | Default Blazor error UI | Fixed — styled error boundary |
-| m2 | MINOR | No breadcrumbs (builder) | Fixed — Admin > Create Survey |
-| m3 | MINOR | No breadcrumbs (detail) | Fixed — Admin > {Title} |
-| m4 | MINOR | Raw enum values | Fixed — friendly labels |
-| m5 | MINOR | No delete confirmation | Fixed — dialog prompt |
-| m6 | MINOR | Actions column alignment | Fixed — right-aligned, outlined |
-| m7 | MINOR | Hidden+disabled button | Fixed — conditional render |
