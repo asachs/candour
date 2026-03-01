@@ -53,7 +53,9 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          dotnet-workload: 'wasm-tools'
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
 
       - name: Publish Web
         run: dotnet publish src/Candour.Web -c Release -o ./publish-web

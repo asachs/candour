@@ -6,7 +6,7 @@ test.describe('Auth Enforcement', () => {
 
     // Blazor WASM needs time to load, initialize, and perform auth redirect
     await page.waitForURL(
-      url => url.includes('authentication/login') || url.includes('login.microsoftonline.com'),
+      url => url.href.includes('authentication/login') || url.href.includes('login.microsoftonline.com'),
       { timeout: 30000 }
     );
   });
@@ -15,7 +15,7 @@ test.describe('Auth Enforcement', () => {
     await page.goto('/admin/builder');
 
     await page.waitForURL(
-      url => url.includes('authentication/login') || url.includes('login.microsoftonline.com'),
+      url => url.href.includes('authentication/login') || url.href.includes('login.microsoftonline.com'),
       { timeout: 30000 }
     );
   });
