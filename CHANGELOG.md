@@ -4,6 +4,15 @@ All notable changes to Candour are documented in this file.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Cosmos DB-backed distributed rate limiting on public API endpoints
+- Per-endpoint rate policies: GET survey (30/min by IP), validate-token (10/min by token), submit-response (5/min by token)
+- Rate limit counters with TTL auto-cleanup — no background jobs needed
+- `rateLimits` Cosmos container with Bicep IaC
+- Rate limiting design document and integration testing design document
+
 ## [0.3.0] - 2026-02-27
 
 ### Added
@@ -74,6 +83,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 - Rating aggregate options display as "X / 5" instead of bare numbers
 - Flaky API integration test resolved with eager server warmup
 
+[Unreleased]: https://github.com/asachs/candour/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/asachs/candour/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/asachs/candour/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/asachs/candour/releases/tag/v0.1.0

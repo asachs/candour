@@ -38,5 +38,12 @@ public class CosmosDbInitializer
             }
         };
         await database.Database.CreateContainerIfNotExistsAsync(usedTokensProperties, cancellationToken: ct);
+
+        // rateLimits container — partition key /key, TTL enabled for auto-cleanup
+        await database.Database.CreateContainerIfNotExistsAsync(
+            new ContainerProperties(_options.RateLimitsContainer, "/key")
+            {
+                DefaultTimeToLive = -1 // container-level TTL enabled, per-document TTL used
+            }, cancellationToken: ct);
     }
 }

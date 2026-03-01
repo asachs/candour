@@ -2,7 +2,7 @@
 
 ## Threat Model
 
-Candour's anonymity design addresses five attack vectors through layered defences:
+Candour's anonymity design addresses six attack vectors through layered defences:
 
 ```mermaid
 block-beta
@@ -22,12 +22,16 @@ block-beta
   block:L5["Layer 5: Access"]
     E["Admin-Only Results<br/>Aggregate results require<br/>Entra ID JWT from allowlisted admin"]
   end
+  block:L6["Layer 6: Abuse Prevention"]
+    F["Rate Limiting<br/>Cosmos DB-backed per-endpoint limits<br/>with TTL auto-cleanup"]
+  end
 
   style L1 fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
   style L2 fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
   style L3 fill:#fce4ec,stroke:#c62828,color:#b71c1c
   style L4 fill:#fff3e0,stroke:#e65100,color:#bf360c
   style L5 fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+  style L6 fill:#e0f2f1,stroke:#00695c,color:#004d40
 ```
 
 1. **Database breach** — Attacker gains read access to the database. Response records contain zero PII fields, so individual responses cannot be attributed.
@@ -39,6 +43,8 @@ block-beta
 4. **Network-level identification** — AnonymityMiddleware strips IP addresses and related headers before any handler processes the request.
 
 5. **Log analysis** — Serilog destructuring policy excludes request bodies, IP addresses, and user agents from all log output.
+
+6. **Brute-force / enumeration** — Distributed rate limiting on public endpoints prevents token brute-force, token enumeration, and survey scraping. Cosmos DB-backed counters persist across scale-to-zero events. See [Rate Limiting Design](DESIGN-RATE-LIMITING.md).
 
 ## Blind Token Scheme
 

@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddSingleton<ISurveyRepository, CosmosSurveyRepository>();
         services.AddSingleton<IResponseRepository, CosmosResponseRepository>();
         services.AddSingleton<IUsedTokenRepository, CosmosUsedTokenRepository>();
+        services.AddSingleton<IRateLimitRepository, CosmosRateLimitRepository>();
 
         // Crypto — pure crypto services (no DB dependency)
         services.AddSingleton<ITokenService, Infrastructure.Crypto.BlindTokenService>();

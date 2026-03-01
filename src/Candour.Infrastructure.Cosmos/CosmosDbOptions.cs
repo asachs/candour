@@ -9,4 +9,5 @@ public class CosmosDbOptions
     public string SurveysContainer { get; set; } = "surveys";
     public string ResponsesContainer { get; set; } = "responses";
     public string UsedTokensContainer { get; set; } = "usedTokens";
+    public string RateLimitsContainer { get; set; } = "rateLimits";
 }

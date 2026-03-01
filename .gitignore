@@ -36,7 +36,8 @@ bld/
 Thumbs.db
 
 ## Deployment
-infra/.env
+infra/.env*
+!infra/.env.example
 infra/main.json
 .publish/
 .publish.zip
@@ -49,6 +50,11 @@ _logs/
 _prebuilds/
 _update-notifier-last-checked
 node_modules/
+
+## Playwright
+test-results/
+playwright-report/
+blob-report/
 
 ## App specific
 appsettings.Development.json

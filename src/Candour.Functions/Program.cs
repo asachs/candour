@@ -30,8 +30,13 @@ else
     builder.Services.AddSingleton<IJwtTokenValidator, NoOpJwtTokenValidator>();
 }
 
-// Middleware: auth first, then anonymity
+// Rate limiting configuration
+builder.Services.Configure<RateLimitingOptions>(
+    builder.Configuration.GetSection(RateLimitingOptions.SectionName));
+
+// Middleware: auth first, then rate limiting, then anonymity
 builder.UseMiddleware<AuthenticationMiddleware>();
+builder.UseMiddleware<RateLimitingMiddleware>();
 builder.UseMiddleware<AnonymityMiddleware>();
 
 // Application layer (MediatR handlers)

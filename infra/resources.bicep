@@ -14,7 +14,7 @@ param entraIdAudience string
 @description('Semicolon-delimited admin email addresses')
 param adminEmails array = []
 
-@description('Static Web App URL for CORS (empty to skip)')
+@description('Static Web App URL for CORS (auto-populated from SWA resource)')
 param staticWebAppUrl string = ''
 
 @description('Tags applied to all resources')
@@ -30,6 +30,7 @@ var logAnalyticsName = 'law-candour-${uniqueSuffix}'
 var keyVaultName = 'kv-candour-${uniqueSuffix}'
 var functionAppName = 'func-candour-${uniqueSuffix}'
 var hostingPlanName = 'asp-candour-${uniqueSuffix}'
+var staticWebAppName = 'swa-candour-${uniqueSuffix}'
 
 // ──────────────────────────────────────────
 // Log Analytics Workspace
@@ -77,6 +78,16 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     allowSharedKeyAccess: false
     allowBlobPublicAccess: false
   }
+}
+
+resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+resource deploymentPackageContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobServices
+  name: 'deploymentpackage'
 }
 
 // ──────────────────────────────────────────
@@ -166,6 +177,21 @@ resource usedTokenContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/
   }
 }
 
+resource rateLimitsContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = {
+  parent: cosmosDb
+  name: 'rateLimits'
+  properties: {
+    resource: {
+      id: 'rateLimits'
+      partitionKey: {
+        paths: ['/key']
+        kind: 'Hash'
+      }
+      defaultTtl: -1
+    }
+  }
+}
+
 // ──────────────────────────────────────────
 // Key Vault
 // ──────────────────────────────────────────
@@ -197,6 +223,22 @@ resource batchSecretKey 'Microsoft.KeyVault/vaults/keys@2023-07-01' = {
     ]
   }
 }
+
+// ──────────────────────────────────────────
+// Static Web App (Blazor WASM frontend)
+// ──────────────────────────────────────────
+resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
+  name: staticWebAppName
+  location: 'westeurope' // SWA Free tier only available in limited regions; location is metadata only
+  tags: tags
+  sku: {
+    name: 'Free'
+    tier: 'Free'
+  }
+  properties: {}
+}
+
+var swaUrl = 'https://${staticWebApp.properties.defaultHostname}'
 
 // ──────────────────────────────────────────
 // Function App (Consumption Plan, Linux)
@@ -297,17 +339,34 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'Candour__FrontendBaseUrl'
-          value: staticWebAppUrl
+          value: empty(staticWebAppUrl) ? swaUrl : staticWebAppUrl
         }
       ]
       cors: {
         allowedOrigins: union([
           'https://localhost:5000'
           'https://localhost:5001'
-        ], empty(staticWebAppUrl) ? [] : [staticWebAppUrl])
+        ], [empty(staticWebAppUrl) ? swaUrl : staticWebAppUrl])
         supportCredentials: true
       }
     }
+  }
+}
+
+// ──────────────────────────────────────────
+// RBAC: Function App → Storage Blob Data Owner
+// Required for Flex Consumption zip deployment and AzureWebJobsStorage
+// when allowSharedKeyAccess is false.
+// ──────────────────────────────────────────
+var storageBlobDataOwnerId = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' // Storage Blob Data Owner
+
+resource functionAppStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, functionApp.id, storageBlobDataOwnerId)
+  scope: storageAccount
+  properties: {
+    principalId: functionApp.identity.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataOwnerId)
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -340,3 +399,5 @@ output cosmosDbAccountName string = cosmosDbAccount.name
 output keyVaultName string = keyVault.name
 output appInsightsName string = appInsights.name
 output functionAppPrincipalId string = functionApp.identity.principalId
+output staticWebAppName string = staticWebApp.name
+output staticWebAppUrl string = swaUrl

@@ -4,9 +4,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# ── Load .env if present ──
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    echo "==> Loading .env..."
+# ── Load environment config ──
+# Usage: ./deploy.sh [env]   (default: prod)
+# Loads .env.{env} if it exists, falls back to .env
+TARGET_ENV="${1:-prod}"
+ENV_FILE="$SCRIPT_DIR/.env.$TARGET_ENV"
+if [ -f "$ENV_FILE" ]; then
+    echo "==> Loading $ENV_FILE..."
+    set -a
+    source "$ENV_FILE"
+    set +a
+elif [ -f "$SCRIPT_DIR/.env" ]; then
+    echo "==> Loading .env (no .env.$TARGET_ENV found)..."
     set -a
     source "$SCRIPT_DIR/.env"
     set +a
@@ -67,11 +76,15 @@ az deployment sub create \
 RESOURCE_GROUP=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query properties.outputs.resourceGroupName.value -o tsv)
 FUNCTION_APP_NAME=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query properties.outputs.functionAppName.value -o tsv)
 FUNCTION_APP_URL=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query properties.outputs.functionAppUrl.value -o tsv)
+SWA_NAME=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query properties.outputs.staticWebAppName.value -o tsv)
+SWA_URL=$(az deployment sub show --name "$DEPLOYMENT_NAME" --query properties.outputs.staticWebAppUrl.value -o tsv)
 
 echo "==> Infrastructure deployed:"
 echo "    Resource Group: $RESOURCE_GROUP"
 echo "    Function App:   $FUNCTION_APP_NAME"
-echo "    URL:            $FUNCTION_APP_URL"
+echo "    API URL:        $FUNCTION_APP_URL"
+echo "    SWA Name:       $SWA_NAME"
+echo "    SWA URL:        $SWA_URL"
 
 # ── Step 4: Deploy Function Code ──
 echo "==> Building Candour.Functions..."
@@ -94,17 +107,57 @@ az functionapp deployment source config-zip \
 
 rm -rf "$PUBLISH_DIR" "$REPO_ROOT/.publish.zip"
 
-# ── Step 5: Verify ──
+# ── Step 5: Deploy Web App (Blazor WASM → Static Web App) ──
+echo "==> Building Candour.Web..."
+WEB_PUBLISH_DIR="$REPO_ROOT/.publish-web"
+rm -rf "$WEB_PUBLISH_DIR"
+dotnet publish "$REPO_ROOT/src/Candour.Web/Candour.Web.csproj" \
+    -c Release \
+    -o "$WEB_PUBLISH_DIR"
+
+# Generate environment-specific appsettings.json
+TENANT_ID="${CANDOUR_ENTRA_TENANT_ID:-$(az account show --query tenantId -o tsv)}"
+cat > "$WEB_PUBLISH_DIR/wwwroot/appsettings.json" <<APPSETTINGS
+{
+  "ApiBaseUrl": "$FUNCTION_APP_URL",
+  "AzureAd": {
+    "Enabled": true,
+    "Authority": "https://login.microsoftonline.com/$TENANT_ID",
+    "ClientId": "$CANDOUR_ENTRA_CLIENT_ID",
+    "ApiScope": "api://$CANDOUR_ENTRA_CLIENT_ID/access_as_user"
+  }
+}
+APPSETTINGS
+# Remove stale pre-compressed versions so SWA serves the updated file
+rm -f "$WEB_PUBLISH_DIR/wwwroot/appsettings.json.br" "$WEB_PUBLISH_DIR/wwwroot/appsettings.json.gz"
+echo "==> Generated appsettings.json (ApiBaseUrl=$FUNCTION_APP_URL)"
+
+# Get SWA deployment token and deploy
+echo "==> Deploying to Static Web App..."
+SWA_TOKEN=$(az staticwebapp secrets list --name "$SWA_NAME" --resource-group "$RESOURCE_GROUP" --query properties.apiKey -o tsv)
+bunx @azure/static-web-apps-cli deploy \
+    "$WEB_PUBLISH_DIR/wwwroot" \
+    --deployment-token "$SWA_TOKEN" \
+    --env production
+
+rm -rf "$WEB_PUBLISH_DIR"
+
+# ── Step 6: Verify ──
 echo "==> Waiting for cold start..."
 sleep 10
 
-echo "==> Testing endpoint..."
+echo "==> Testing API endpoint..."
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FUNCTION_APP_URL/api/surveys")
 echo "    GET /api/surveys → HTTP $HTTP_STATUS"
+
+echo "==> Testing SWA..."
+SWA_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SWA_URL")
+echo "    GET $SWA_URL → HTTP $SWA_STATUS"
 
 echo ""
 echo "=== DEPLOYMENT COMPLETE ==="
 echo "Function App URL: $FUNCTION_APP_URL"
+echo "Static Web App:   $SWA_URL"
 echo "Entra ID App ID:  $CANDOUR_ENTRA_CLIENT_ID"
 echo "API Key:          $CANDOUR_API_KEY"
 echo ""

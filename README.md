@@ -13,6 +13,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/asachs/candour/actions/workflows/ci.yml"><img src="https://github.com/asachs/candour/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/asachs/candour/actions/workflows/release.yml"><img src="https://github.com/asachs/candour/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/.NET-9.0-purple.svg" alt=".NET 9" />
   <img src="https://img.shields.io/badge/anonymity-by_design-teal.svg" alt="Anonymity by Design" />
@@ -30,6 +32,7 @@ Most survey tools treat anonymity as a policy: "we won't store your name." Cando
 - **Timestamp jitter** — Configurable random offset applied before storage
 - **Threshold gating** — Results only available after minimum response count
 - **Aggregate-only results** — No API endpoint returns individual response data
+- **Rate limiting** — Cosmos DB-backed distributed rate limiting on public endpoints with TTL auto-cleanup
 - **Admin-only results access** — Aggregate results endpoints require authenticated admin authorization (Entra ID JWT)
 
 ## Architecture
@@ -49,6 +52,7 @@ flowchart TB
 
         subgraph Functions["Azure Functions (Flex Consumption)"]
             AUTH["Auth Middleware<br/>Entra ID JWT + Admin Allowlist"]
+            RL["Rate Limiting<br/>Cosmos DB + TTL"]
             ANON["Anonymity Middleware<br/>IP Stripping"]
             API["API Endpoints<br/>MediatR CQRS"]
         end
@@ -63,8 +67,9 @@ flowchart TB
     end
 
     BW -->|"Entra ID JWT"| AUTH
-    RF -->|"Blind Token"| ANON
-    AUTH --> API
+    RF -->|"Blind Token"| RL
+    AUTH --> RL
+    RL --> ANON
     ANON --> API
     API --> COSMOS
     API --> KV
@@ -151,6 +156,8 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for full Azure deployment instructions cove
 
 - [Deployment Guide](docs/DEPLOY.md) — Azure deployment instructions
 - [Anonymity Architecture](docs/ANONYMITY.md) — threat model and design decisions
+- [Rate Limiting Design](docs/DESIGN-RATE-LIMITING.md) — Cosmos DB-backed distributed rate limiting
+- [Integration Testing Design](docs/DESIGN-INTEGRATION-TESTING.md) — three-phase testing strategy
 - [User Journeys](docs/USER-JOURNEYS.md) — end-to-end test evidence
 
 ## License

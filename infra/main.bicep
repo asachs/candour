@@ -55,3 +55,5 @@ output functionAppUrl string = resources.outputs.functionAppUrl
 output cosmosDbAccountName string = resources.outputs.cosmosDbAccountName
 output keyVaultName string = resources.outputs.keyVaultName
 output appInsightsName string = resources.outputs.appInsightsName
+output staticWebAppName string = resources.outputs.staticWebAppName
+output staticWebAppUrl string = resources.outputs.staticWebAppUrl
