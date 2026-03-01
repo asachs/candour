@@ -6,7 +6,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Load environment config ──
 # Usage: ./deploy.sh [env]   (default: prod)
-# Loads .env.{env} if it exists, falls back to .env
+# Loads .env.{env} for non-secret configuration
 TARGET_ENV="${1:-prod}"
 ENV_FILE="$SCRIPT_DIR/.env.$TARGET_ENV"
 if [ -f "$ENV_FILE" ]; then
@@ -14,11 +14,9 @@ if [ -f "$ENV_FILE" ]; then
     set -a
     source "$ENV_FILE"
     set +a
-elif [ -f "$SCRIPT_DIR/.env" ]; then
-    echo "==> Loading .env (no .env.$TARGET_ENV found)..."
-    set -a
-    source "$SCRIPT_DIR/.env"
-    set +a
+else
+    echo "ERROR: $ENV_FILE not found. Create it from .env.example." >&2
+    exit 1
 fi
 
 # ── Validate required env vars ──
@@ -54,10 +52,24 @@ else
     fi
 fi
 
-# ── Step 2: Generate API key if not set ──
+# ── Step 2: Resolve API key ──
+# Priority: Key Vault → environment variable → generate new
+KV_NAME_PREFIX="kv-candour-"
+RESOURCE_GROUP_NAME="ansachs-rg-candour-${ENV_NAME}"
+EXISTING_KV=$(az keyvault list --resource-group "$RESOURCE_GROUP_NAME" --query '[0].name' -o tsv 2>/dev/null || true)
+
+if [ -n "$EXISTING_KV" ]; then
+    KV_KEY=$(az keyvault secret show --vault-name "$EXISTING_KV" --name "candour-api-key" --query value -o tsv 2>/dev/null || true)
+    if [ -n "$KV_KEY" ]; then
+        CANDOUR_API_KEY="$KV_KEY"
+        echo "==> API key loaded from Key Vault ($EXISTING_KV)"
+    fi
+fi
+
 if [ -z "${CANDOUR_API_KEY:-}" ]; then
     CANDOUR_API_KEY=$(openssl rand -base64 32)
-    echo "==> Generated API key (save this): $CANDOUR_API_KEY"
+    echo "==> Generated new API key (will be stored in Key Vault after deployment)"
+    STORE_KEY_IN_KV=true
 fi
 
 export CANDOUR_API_KEY
@@ -85,6 +97,16 @@ echo "    Function App:   $FUNCTION_APP_NAME"
 echo "    API URL:        $FUNCTION_APP_URL"
 echo "    SWA Name:       $SWA_NAME"
 echo "    SWA URL:        $SWA_URL"
+
+# Store API key in Key Vault if newly generated
+if [ "${STORE_KEY_IN_KV:-}" = "true" ]; then
+    KV_NAME=$(az keyvault list --resource-group "$RESOURCE_GROUP" --query '[0].name' -o tsv)
+    if [ -n "$KV_NAME" ]; then
+        az keyvault secret set --vault-name "$KV_NAME" --name "candour-api-key" --value "$CANDOUR_API_KEY" -o none 2>/dev/null \
+            && echo "==> API key stored in Key Vault ($KV_NAME)" \
+            || echo "WARN: Could not store API key in Key Vault. Assign Key Vault Secrets Officer role and re-run."
+    fi
+fi
 
 # ── Step 4: Deploy Function Code ──
 echo "==> Building Candour.Functions..."
@@ -159,8 +181,6 @@ echo "=== DEPLOYMENT COMPLETE ==="
 echo "Function App URL: $FUNCTION_APP_URL"
 echo "Static Web App:   $SWA_URL"
 echo "Entra ID App ID:  $CANDOUR_ENTRA_CLIENT_ID"
-echo "API Key:          $CANDOUR_API_KEY"
 echo ""
 echo "Test with:"
 echo "  curl $FUNCTION_APP_URL/api/surveys"
-echo "  curl -H 'X-Api-Key: $CANDOUR_API_KEY' -X POST $FUNCTION_APP_URL/api/surveys -d '{...}'"
