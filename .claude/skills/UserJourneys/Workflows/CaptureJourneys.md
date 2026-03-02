@@ -39,6 +39,16 @@ Run this on every page before taking a screenshot:
 
 **Before executing:** Replace `REAL_NAME_HERE` with the actual authenticated user's name (visible in the nav bar) and `HOSTNAME_HERE` with the actual SWA hostname from the browser's URL bar.
 
+### Full-Page Screenshot Fix
+
+MudBlazor's `MudAppBar` uses `position: fixed`, which causes it to float over content in full-page screenshots. Before any `fullPage: true` screenshot, run:
+
+```javascript
+document.querySelector('.mud-appbar')?.style.setProperty('position', 'relative');
+```
+
+This makes the app bar flow inline with the page content for the capture. No need to reset it afterward since the next navigation restores it.
+
 ---
 
 ## Step 0: Prerequisites
@@ -130,7 +140,8 @@ If you have an unauthenticated session available:
    - Type: Rating (Stars)
    - Text: "Rate your overall job satisfaction"
 6. **Run redaction script**
-7. Take full-page screenshot -> `docs/screenshots/survey-builder.png`
+7. **Run full-page screenshot fix** (see Redaction Configuration section)
+8. Take full-page screenshot -> `docs/screenshots/survey-builder.png`
 
 > **Do NOT click "Create Survey"** — this screenshot captures the builder in-progress.
 
