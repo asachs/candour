@@ -34,14 +34,19 @@ public class EntraIdJwtTokenValidator : IJwtTokenValidator
     {
         var config = await _configManager.GetConfigurationAsync(CancellationToken.None);
 
+        var audience = string.IsNullOrEmpty(_options.Audience) ? _options.ClientId : _options.Audience;
         var validationParameters = new TokenValidationParameters
         {
             ValidIssuers = new[]
             {
+                // v2.0 endpoint issuers
                 $"https://login.microsoftonline.com/{_options.TenantId}/v2.0",
-                $"https://login.microsoftonline.com/{MsaConsumerTenantId}/v2.0"
+                $"https://login.microsoftonline.com/{MsaConsumerTenantId}/v2.0",
+                // v1.0 endpoint issuers (sts.windows.net)
+                $"https://sts.windows.net/{_options.TenantId}/",
+                $"https://sts.windows.net/{MsaConsumerTenantId}/"
             },
-            ValidAudience = string.IsNullOrEmpty(_options.Audience) ? _options.ClientId : _options.Audience,
+            ValidAudiences = new[] { audience, _options.ClientId, $"api://{_options.ClientId}" },
             IssuerSigningKeys = config.SigningKeys,
             ValidateIssuer = true,
             ValidateAudience = true,
