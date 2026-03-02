@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-03-02
+
+### Added
+- Documentation link in site footer pointing to asachs.github.io/candour
+
+### Fixed
+- Survey builder screenshot: app bar no longer floats over content in full-page captures
+- UserJourneys workflow: added full-page screenshot fix for MudBlazor fixed app bar
+
 ## [0.4.0] - 2026-03-02
 
 ### Added
