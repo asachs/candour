@@ -6,6 +6,13 @@ All notable changes to Candour are documented here. Format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-03-02
+
+### Fixed
+
+- Removed hardcoded `localhost` origins from Bicep CORS configuration to prevent prod config drift
+- Added localhost detection smoke test to CI pipeline — deploys fail if `appsettings.json` contains localhost
+
 ## [0.5.0] - 2026-03-02
 
 ### Added
@@ -131,7 +138,8 @@ All notable changes to Candour are documented here. Format follows [Keep a Chang
 
 ---
 
-[Unreleased]: https://github.com/asachs/candour/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/asachs/candour/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/asachs/candour/compare/v0.5.0...v0.5.2
 [0.5.0]: https://github.com/asachs/candour/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/asachs/candour/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/asachs/candour/compare/v0.2.0...v0.3.0
