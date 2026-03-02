@@ -66,6 +66,9 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
   - md_in_html
   - def_list
@@ -73,6 +76,9 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+
+extra_css:
+  - stylesheets/extra.css
 
 extra:
   social:
