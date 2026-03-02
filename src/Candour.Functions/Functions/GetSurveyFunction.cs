@@ -42,6 +42,8 @@ public class GetSurveyFunction
             AnonymityThreshold = survey.AnonymityThreshold,
             TimestampJitterMinutes = survey.TimestampJitterMinutes,
             CreatedAt = survey.CreatedAt,
+            AdminNames = System.Text.Json.JsonSerializer.Deserialize<List<string>>(survey.AdminNames) ?? new(),
+            ViewCount = survey.ViewCount,
             Questions = survey.Questions.Select(q => new QuestionDto
             {
                 Id = q.Id,

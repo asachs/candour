@@ -9,5 +9,7 @@ public class SurveyDto
     public int AnonymityThreshold { get; set; }
     public int TimestampJitterMinutes { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<string> AdminNames { get; set; } = new();
+    public int ViewCount { get; set; }
     public List<QuestionDto> Questions { get; set; } = new();
 }

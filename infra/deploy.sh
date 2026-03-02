@@ -142,6 +142,7 @@ TENANT_ID="${CANDOUR_ENTRA_TENANT_ID:-$(az account show --query tenantId -o tsv)
 cat > "$WEB_PUBLISH_DIR/wwwroot/appsettings.json" <<APPSETTINGS
 {
   "ApiBaseUrl": "$FUNCTION_APP_URL",
+  "EngineeringMode": true,
   "AzureAd": {
     "Enabled": true,
     "Authority": "https://login.microsoftonline.com/$TENANT_ID",

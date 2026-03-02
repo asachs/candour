@@ -87,15 +87,42 @@ sequenceDiagram
 4. If hash absent — store hash in UsedTokens, store answers in Responses (separate, unlinked)
 5. Original token discarded — SHA256 is one-way
 
+## Engineering Mode: Proving Anonymity to Respondents
+
+Candour doesn't just claim anonymity — it proves it. When engineering mode is enabled, respondents see the exact Cosmos DB document stored after submission:
+
+```json
+{
+  "Id": "a1b2c3d4-...",
+  "SurveyId": "e5f6g7h8-...",
+  "Answers": "{\"q1\":\"Yes\",\"q2\":\"Great team\"}",
+  "SubmittedAt": "2026-03-02T10:15:00Z"
+}
+```
+
+Alongside the stored document, an explicit list shows what was **not** stored: IP address, user agent, survey token, respondent identity, and cookies. This transparency is safe because the `SurveyResponse` entity contains zero identity fields by design.
+
+Controlled by the `EngineeringMode` configuration key (default: `true`).
+
 ## Design decision: structural vs policy anonymity
 
 Policy-based anonymity relies on configuration to exclude identity data. A code change, misconfiguration, or database join can defeat it.
 
 Candour's Response entity has no fields for identity data. Adding PII to responses requires modifying the database schema — it cannot happen through normal API usage.
 
+## CSV Export
+
+Admins can export response data as CSV via `GET /api/surveys/{id}/export`. The export preserves all anonymity guarantees:
+
+- **Threshold gate** — Export is blocked until the anonymity threshold is met (same rule as aggregate results)
+- **Row shuffling** — Responses are shuffled using CSPRNG before CSV generation, preventing ordering correlation
+- **Zero PII columns** — The CSV contains only question answers and jittered timestamps. No identity fields exist to export.
+
+The export endpoint is protected by the same admin authentication middleware as all other admin routes.
+
 ## Access Control
 
-Aggregate results are only accessible to authenticated admin users. The API enforces this via middleware:
+Aggregate results and exports are only accessible to authenticated admin users. The API enforces this via middleware:
 
 ```mermaid
 flowchart LR
@@ -113,6 +140,7 @@ flowchart LR
         F["POST /surveys/{id}/publish<br/>Publish + generate tokens"]
         G["POST /surveys/{id}/analyze<br/>Run AI analysis"]
         H["GET /surveys/{id}/results<br/>View aggregate results"]
+        I["GET /surveys/{id}/export<br/>Export responses as CSV"]
     end
 
     style Public fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20

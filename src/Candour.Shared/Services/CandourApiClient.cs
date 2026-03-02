@@ -46,7 +46,10 @@ public class CandourApiClient : ICandourApiClient
     {
         var response = await _http.PostAsJsonAsync($"api/surveys/{surveyId}/responses", request, ct);
         if (response.IsSuccessStatusCode)
-            return new SubmitResult(true);
+        {
+            var doc = await response.Content.ReadFromJsonAsync<StoredDocumentDto>(JsonOptions, ct);
+            return new SubmitResult(true, StoredDocument: doc);
+        }
 
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(JsonOptions, ct);
         return new SubmitResult(false, error?.Error ?? "Unknown error");
@@ -79,6 +82,19 @@ public class CandourApiClient : ICandourApiClient
         var response = await _http.PostAsync($"api/surveys/{surveyId}/analyze", null, ct);
         if (!response.IsSuccessStatusCode) return null;
         return await response.Content.ReadFromJsonAsync<AnalysisReportDto>(JsonOptions, ct);
+    }
+
+    public async Task<ExportCsvResult> ExportCsvAsync(Guid surveyId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/surveys/{surveyId}/export", ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsByteArrayAsync(ct);
+            var fileName = response.Content.Headers.ContentDisposition?.FileName?.Trim('"') ?? "export.csv";
+            return new ExportCsvResult(true, content, fileName);
+        }
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(JsonOptions, ct);
+        return new ExportCsvResult(false, Error: error?.Error ?? "Export failed");
     }
 
     private class ErrorResponse

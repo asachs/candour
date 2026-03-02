@@ -39,6 +39,7 @@ public class SubmitResponseFunction
         if (result.Success)
         {
             var ok = req.CreateResponse(System.Net.HttpStatusCode.OK);
+            await ok.WriteAsJsonAsync(result.StoredDocument, ct);
             return ok;
         }
 

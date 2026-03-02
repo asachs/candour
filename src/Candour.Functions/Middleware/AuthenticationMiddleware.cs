@@ -16,8 +16,8 @@ public partial class AuthenticationMiddleware : IFunctionsWorkerMiddleware
     private readonly bool _useEntraId;
     private readonly HashSet<string> _adminEmails;
 
-    // Admin routes: /api/surveys (list+create), /api/surveys/{id}/publish, /api/surveys/{id}/analyze, /api/surveys/{id}/results
-    [GeneratedRegex(@"^/api/surveys(?:/[^/]+/(?:publish|analyze|results))?$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
+    // Admin routes: /api/surveys (list+create), /api/surveys/{id}/publish, /api/surveys/{id}/analyze, /api/surveys/{id}/results, /api/surveys/{id}/export
+    [GeneratedRegex(@"^/api/surveys(?:/[^/]+/(?:publish|analyze|results|export))?$", RegexOptions.IgnoreCase | RegexOptions.Compiled)]
     private static partial Regex AdminRoutePattern();
 
     public AuthenticationMiddleware(IJwtTokenValidator jwtValidator, IConfiguration configuration)

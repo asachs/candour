@@ -6,7 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-02
+
 ### Added
+- Consent gate: respondents see who has access to aggregate results before starting the survey
+- Admin names snapshotted on survey at publish time from configured admin email list
+- Engagement metric: `ViewCount` incremented on each valid token validation (anonymous counter, no PII)
+- Engagement funnel on admin survey detail page (views vs responses)
+- GitHub footer link on all pages (source code link)
+- Engineering mode: after survey submission, expandable panel shows the exact Cosmos DB document stored and what was NOT stored (IP, user agent, token, identity, cookies)
+- `EngineeringMode` configuration flag (`appsettings.json`) — enabled by default in all environments
+- Submit response API now returns the stored document in the response body (zero PII by design)
+- CSV export of survey responses (`GET /api/surveys/{id}/export`) with admin auth, anonymity threshold gate, and CSPRNG row shuffling
+- Export CSV button on admin survey detail page with browser file download
 - Cosmos DB-backed distributed rate limiting on public API endpoints
 - Per-endpoint rate policies: GET survey (30/min by IP), validate-token (10/min by token), submit-response (5/min by token)
 - Rate limit counters with TTL auto-cleanup — no background jobs needed
@@ -83,7 +95,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versioning follo
 - Rating aggregate options display as "X / 5" instead of bare numbers
 - Flaky API integration test resolved with eager server warmup
 
-[Unreleased]: https://github.com/asachs/candour/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/asachs/candour/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/asachs/candour/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/asachs/candour/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/asachs/candour/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/asachs/candour/releases/tag/v0.1.0

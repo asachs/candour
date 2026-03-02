@@ -32,8 +32,10 @@ Most survey tools treat anonymity as a policy: "we won't store your name." Cando
 - **Timestamp jitter** — Configurable random offset applied before storage
 - **Threshold gating** — Results only available after minimum response count
 - **Aggregate-only results** — No API endpoint returns individual response data
+- **Engineering mode** — After submission, shows the exact Cosmos DB document stored and an explicit list of what was *not* stored (IP, user agent, token, identity, cookies)
 - **Rate limiting** — Cosmos DB-backed distributed rate limiting on public endpoints with TTL auto-cleanup
-- **Admin-only results access** — Aggregate results endpoints require authenticated admin authorization (Entra ID JWT)
+- **CSV export** — Admin export of response data with row shuffling and threshold enforcement
+- **Admin-only results access** — Aggregate results and export endpoints require authenticated admin authorization (Entra ID JWT)
 
 ## Architecture
 
@@ -83,7 +85,7 @@ flowchart TB
     style SWA fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
 ```
 
-**Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`) require Entra ID JWT or API key.
+**Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`, `.../export`) require Entra ID JWT or API key.
 **Public routes** (`/api/surveys/{id}`, `.../validate-token`) are unauthenticated. Response submission (`POST .../responses`) uses blind tokens for anonymous access.
 
 ## Tech Stack
@@ -151,6 +153,12 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for full Azure deployment instructions cove
 - Azure infrastructure provisioning
 - Configuration and CORS
 - CI/CD pipeline
+
+## Engineering Mode
+
+After submitting a survey response, respondents see an expandable panel showing the exact Cosmos DB document that was stored — and an explicit list of what was *not* stored. This proves the anonymity architecture isn't just a claim: the stored record contains only `Id`, `SurveyId`, `Answers`, and `SubmittedAt`. No IP address, no user agent, no token, no identity, no cookies.
+
+Controlled by the `EngineeringMode` configuration key (default: `true`). See [docs/DEPLOY.md](docs/DEPLOY.md) for configuration details.
 
 ## Documentation
 

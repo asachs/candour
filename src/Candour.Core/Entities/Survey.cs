@@ -14,6 +14,8 @@ public class Survey
     public int TimestampJitterMinutes { get; set; } = 10;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string BatchSecret { get; set; } = string.Empty; // 256-bit key, base64
+    public string AdminNames { get; set; } = "[]"; // JSON array of admin display names, snapshotted at publish
+    public int ViewCount { get; set; } // Incremented on each valid token validation (engagement metric)
 
     public List<Question> Questions { get; set; } = new();
 }

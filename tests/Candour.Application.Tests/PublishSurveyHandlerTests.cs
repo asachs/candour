@@ -5,17 +5,20 @@ using Candour.Core.Entities;
 using Candour.Core.Enums;
 using Candour.Core.Interfaces;
 using Candour.Application.Surveys;
+using Microsoft.Extensions.Configuration;
 
 public class PublishSurveyHandlerTests
 {
     private readonly Mock<ISurveyRepository> _repo = new();
     private readonly Mock<ITokenService> _tokenService = new();
     private readonly Mock<IBatchSecretProtector> _protector = new();
+    private readonly Mock<IConfiguration> _configuration = new();
     private readonly PublishSurveyHandler _handler;
 
     public PublishSurveyHandlerTests()
     {
-        _handler = new PublishSurveyHandler(_repo.Object, _tokenService.Object, _protector.Object);
+        _configuration.Setup(c => c["Candour:Auth:AdminEmails"]).Returns("admin@example.com");
+        _handler = new PublishSurveyHandler(_repo.Object, _tokenService.Object, _protector.Object, _configuration.Object);
     }
 
     [Fact]

@@ -11,7 +11,7 @@ public record SubmitResponseCommand(
     Dictionary<string, string> Answers
 ) : IRequest<SubmitResponseResult>;
 
-public record SubmitResponseResult(bool Success, string? Error = null);
+public record SubmitResponseResult(bool Success, string? Error = null, SurveyResponse? StoredDocument = null);
 
 public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, SubmitResponseResult>
 {
@@ -68,6 +68,6 @@ public class SubmitResponseHandler : IRequestHandler<SubmitResponseCommand, Subm
         };
 
         await _responseRepo.AddAsync(response, ct);
-        return new SubmitResponseResult(true);
+        return new SubmitResponseResult(true, StoredDocument: response);
     }
 }

@@ -19,6 +19,24 @@
         <MudText Typo="Typo.body2" Color="Color.Secondary">
             Your response cannot be linked back to you. The token has been consumed.
         </MudText>
+        @if (EngineeringMode.Enabled && _storedDocument != null)
+        {
+            <MudExpansionPanels Class="mt-6" Elevation="1">
+                <MudExpansionPanel Text="What was actually stored (Engineering Mode)" MaxHeight="1000">
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">Exact Cosmos DB document:</MudText>
+                    <MudPaper Class="pa-4" Style="background-color: #f5f5f5; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem;">@FormatStoredDocument()</MudPaper>
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">What was NOT stored:</MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error">IP address</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error">User agent / browser fingerprint</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error">Survey token (consumed and stored separately)</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error">Respondent identity</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Block" IconColor="Color.Error">Cookies or session data</MudListItem>
+                    </MudList>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        }
     }
     else if (!string.IsNullOrEmpty(_tokenError))
     {
@@ -27,6 +45,44 @@
     else if (_survey.Status != "Active")
     {
         <MudAlert Severity="Severity.Warning">This survey is not currently accepting responses.</MudAlert>
+    }
+    else if (_declined)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4">
+            Thank you for considering. Your token is still valid if you change your mind.
+        </MudAlert>
+    }
+    else if (_survey.AdminNames.Any() && !_consentGiven)
+    {
+        <MudCard Elevation="2" Class="pa-2">
+            <MudCardContent>
+                <MudText Typo="Typo.h5" GutterBottom="true">Before you begin</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">
+                    The following people have access to the aggregate results of this survey.
+                    They cannot see individual responses or identify who said what.
+                </MudText>
+
+                <MudList T="string" Dense="true" Class="mb-4">
+                    @foreach (var name in _survey.AdminNames)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary">@name</MudListItem>
+                    }
+                </MudList>
+
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                    Your response is anonymous by design. No IP address, identity, or session data is stored.
+                </MudAlert>
+
+                <div class="d-flex gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => _consentGiven = true)">
+                        I understand, begin survey
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@(() => _declined = true)">
+                        No thanks
+                    </MudButton>
+                </div>
+            </MudCardContent>
+        </MudCard>
     }
     else
     {
@@ -107,6 +163,7 @@
 
     [Inject(Key = "Public")]
     private ICandourApiClient Api { get; set; } = null!;
+    [Inject] private EngineeringModeFlag EngineeringMode { get; set; } = null!;
 
     private SurveyDto? _survey;
     private Dictionary<string, string> _answers = new();
@@ -115,6 +172,9 @@
     private bool _submitting;
     private string? _error;
     private string? _tokenError;
+    private StoredDocumentDto? _storedDocument;
+    private bool _consentGiven;
+    private bool _declined;
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,10 +233,25 @@
         var result = await Api.SubmitResponseAsync(SurveyId, request);
 
         if (result.Success)
+        {
             _submitted = true;
+            _storedDocument = result.StoredDocument;
+        }
         else
             _error = result.Error;
 
         _submitting = false;
+    }
+
+    private string FormatStoredDocument()
+    {
+        if (_storedDocument == null) return "{}";
+        return System.Text.Json.JsonSerializer.Serialize(new
+        {
+            _storedDocument.Id,
+            _storedDocument.SurveyId,
+            _storedDocument.Answers,
+            _storedDocument.SubmittedAt
+        }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     }
 }

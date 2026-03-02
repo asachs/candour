@@ -44,6 +44,10 @@ public class ValidateTokenHandler : IRequestHandler<ValidateTokenQuery, Validate
         if (await _usedTokenRepo.ExistsAsync(tokenHash, request.SurveyId, ct))
             return new ValidateTokenResult(false, "Token already used");
 
+        // Increment engagement counter (anonymous — just a number, no PII)
+        survey.ViewCount++;
+        await _surveyRepo.UpdateAsync(survey, ct);
+
         return new ValidateTokenResult(true);
     }
 }

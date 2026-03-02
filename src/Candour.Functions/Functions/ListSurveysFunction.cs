@@ -1,5 +1,6 @@
 namespace Candour.Functions.Functions;
 
+using System.Text.Json;
 using Candour.Application.Surveys;
 using Candour.Shared.Models;
 using MediatR;
@@ -30,7 +31,9 @@ public class ListSurveysFunction
             Status = s.Status.ToString(),
             AnonymityThreshold = s.AnonymityThreshold,
             TimestampJitterMinutes = s.TimestampJitterMinutes,
-            CreatedAt = s.CreatedAt
+            CreatedAt = s.CreatedAt,
+            AdminNames = JsonSerializer.Deserialize<List<string>>(s.AdminNames) ?? new(),
+            ViewCount = s.ViewCount
         }).ToList();
 
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);

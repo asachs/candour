@@ -14,6 +14,7 @@ builder.Services.AddMudServices();
 
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.BaseAddress;
 var useEntraId = builder.Configuration.GetValue<bool>("AzureAd:Enabled");
+var engineeringMode = builder.Configuration.GetValue<bool>("EngineeringMode");
 
 if (useEntraId)
 {
@@ -44,6 +45,7 @@ else
 }
 
 builder.Services.AddScoped<ICandourApiClient, CandourApiClient>();
+builder.Services.AddSingleton(new EngineeringModeFlag(engineeringMode));
 
 // Public (unauthenticated) API client for anonymous respondent access.
 // SurveyForm uses this to avoid AccessTokenNotAvailableException on public endpoints.
@@ -51,3 +53,5 @@ builder.Services.AddKeyedScoped<ICandourApiClient>("Public", (_, _) =>
     new CandourApiClient(new HttpClient { BaseAddress = new Uri(apiBaseUrl) }));
 
 await builder.Build().RunAsync();
+
+public record EngineeringModeFlag(bool Enabled);

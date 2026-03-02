@@ -324,6 +324,7 @@ Two secrets must be configured in **GitHub → Settings → Secrets and variable
 | `AzureAd:ClientId` | When enabled | — | App registration client ID |
 | `AzureAd:ApiScope` | When enabled | — | `api://{client-id}/access_as_user` |
 | `ApiBaseUrl` | No | WASM base address | Functions API base URL |
+| `EngineeringMode` | No | `true` | Show stored document details after survey submission |
 
 ### Auth Modes
 

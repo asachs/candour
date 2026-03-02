@@ -14,7 +14,10 @@ public interface ICandourApiClient
     Task<string?> GetResultsErrorAsync(Guid surveyId, CancellationToken ct = default);
     Task<ValidateTokenResponse> ValidateTokenAsync(Guid surveyId, string token, CancellationToken ct = default);
     Task<AnalysisReportDto?> RunAnalysisAsync(Guid surveyId, CancellationToken ct = default);
+    Task<ExportCsvResult> ExportCsvAsync(Guid surveyId, CancellationToken ct = default);
 }
 
-public record SubmitResult(bool Success, string? Error = null);
+public record StoredDocumentDto(Guid Id, Guid SurveyId, string Answers, DateTime SubmittedAt);
+public record SubmitResult(bool Success, string? Error = null, StoredDocumentDto? StoredDocument = null);
 public record ValidateTokenResponse(bool Valid, string? Error = null);
+public record ExportCsvResult(bool Success, byte[]? Content = null, string? FileName = null, string? Error = null);
