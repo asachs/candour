@@ -6,6 +6,31 @@ All notable changes to Candour are documented here. Format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-02
+
+### Added
+
+- MkDocs Material documentation site with 37 pages covering architecture, security, API reference, deployment, configuration, admin guide, and development
+- Dark/light theme toggle with native Mermaid diagram support
+- GitHub Pages deployment via Actions workflow (`docs.yml`)
+- Full API reference with request/response examples for all 8 endpoints
+- Anonymity architecture deep-dive with blind token scheme documentation
+- Threat model with STRIDE analysis
+- Deployment guide with manual and IaC paths
+- Three authentication modes documented (Entra ID, API Key, Disabled)
+
+### Changed
+
+- User journeys document rewritten from 7 to 11 journeys for v0.4.0 coverage
+- CSV export refactored to use JS interop download instead of data URL
+- Updated all screenshots to reflect current UI state
+
+### Fixed
+
+- CSV export missing `Access-Control-Expose-Headers: Content-Disposition` header
+- Mermaid diagrams unreadable in dark mode (removed hardcoded pastel colors)
+- Octicon icons rendering as raw text (added pymdownx.emoji extension)
+
 ## [0.4.0] - 2026-03-02
 
 ### Added
@@ -106,7 +131,8 @@ All notable changes to Candour are documented here. Format follows [Keep a Chang
 
 ---
 
-[Unreleased]: https://github.com/asachs/candour/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/asachs/candour/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/asachs/candour/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/asachs/candour/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/asachs/candour/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/asachs/candour/compare/v0.1.0...v0.2.0
