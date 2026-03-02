@@ -1,6 +1,6 @@
 # CaptureJourneys Workflow
 
-Captures all 13 user journey screenshots with PII redaction and regenerates `docs/USER-JOURNEYS.md`.
+Captures all 17 user journey screenshots with PII redaction and regenerates `docs/USER-JOURNEYS.md`.
 
 ---
 
@@ -165,31 +165,44 @@ To get a draft survey screenshot, either:
 
 ---
 
-## Step 6: Capture Survey Detail with Question Chips
+## Step 6: Capture Survey Detail with Engagement & Export
 
 ### Screenshot 7: `survey-detail.png`
 
 1. Navigate to any published survey's detail page: `/admin/survey/{id}`
 2. Wait for questions to load with option chips displayed
-3. **Run redaction script**
-4. Take full-page screenshot -> `docs/screenshots/survey-detail.png`
+3. Verify the following v0.4.0 elements are visible:
+   - **Engagement panel** (Views / Responses) — appears if ViewCount > 0
+   - **Consent screen indicator** — "Consent screen shows: admin1, admin2" caption
+   - **Export CSV** button next to "Load Aggregate Results"
+   - **GitHub footer** at bottom of page
+4. **Run redaction script** (critical — admin emails may appear in consent caption)
+5. Take full-page screenshot -> `docs/screenshots/survey-detail.png`
 
 ---
 
-## Step 7: Capture Respondent Survey Form
+## Step 7: Capture Respondent Survey Form (with Consent Gate + Engineering Mode)
 
-### Screenshot 8: `survey-form.png`
+### Screenshot 8: `consent-gate.png` — Consent gate before survey
 
-You need a valid, unused token for a published survey.
+You need a valid, unused token for a published survey that has admin names snapshotted.
 
 1. Get a token URL from the published survey (Step 5) or from the API
 2. Navigate to `/survey/{id}?t={token}`
-3. Wait for the form to load with radio buttons / text fields
-4. Optionally select an answer (e.g., click "Satisfied") for a more realistic screenshot
-5. **Run redaction script**
-6. Take full-page screenshot -> `docs/screenshots/survey-form.png`
+3. Wait for the consent gate card: "Before you begin" with admin names listed
+4. **Run redaction script** (critical — admin email addresses may appear as names)
+5. Take full-page screenshot -> `docs/screenshots/consent-gate.png`
+6. Click "I understand, begin survey" to proceed past the consent gate
 
-### Screenshot 9: `survey-submitted.png`
+### Screenshot 9: `survey-form.png` — Survey form (after consent)
+
+1. After clicking through the consent gate, the survey form loads
+2. Wait for the form to load with radio buttons / text fields
+3. Optionally select an answer (e.g., click "Satisfied") for a more realistic screenshot
+4. **Run redaction script**
+5. Take full-page screenshot -> `docs/screenshots/survey-form.png`
+
+### Screenshot 10: `survey-submitted.png` — Success with engineering mode
 
 1. Fill in answers for all required questions
 2. Click "Submit Anonymously"
@@ -197,7 +210,15 @@ You need a valid, unused token for a published survey.
 4. **Run redaction script**
 5. Take full-page screenshot -> `docs/screenshots/survey-submitted.png`
 
-### Screenshot 10: `survey-form-not-found.png`
+### Screenshot 11: `engineering-mode.png` — Engineering mode panel expanded
+
+1. After submission success, locate the "What was actually stored (Engineering Mode)" expansion panel
+2. Click the panel to expand it
+3. Wait for the JSON document and "What was NOT stored" list to appear
+4. **Run redaction script**
+5. Take full-page screenshot -> `docs/screenshots/engineering-mode.png`
+
+### Screenshot 12: `survey-form-not-found.png`
 
 1. Navigate to `/survey/00000000-0000-0000-0000-000000000000?t=fake`
 2. Wait for error: "Survey not found or could not be loaded."
@@ -205,9 +226,9 @@ You need a valid, unused token for a published survey.
 
 ---
 
-## Step 8: Capture Aggregate Results
+## Step 8: Capture Aggregate Results & CSV Export
 
-### Screenshot 11: `aggregate-results.png`
+### Screenshot 13: `aggregate-results.png`
 
 **Prerequisite:** The survey must have responses meeting the anonymity threshold.
 
@@ -222,16 +243,28 @@ curl -s -X POST "API_URL/api/surveys/{surveyId}/responses" \
 
 Then:
 1. Navigate to `/admin/survey/{id}` for the survey with sufficient responses
-2. Click "Load Aggregate Results"
-3. Wait for the results table to appear (Option / Count / Percentage columns)
-4. **Run redaction script**
-5. Take full-page screenshot -> `docs/screenshots/aggregate-results.png`
+2. Note the **Engagement panel** (Views vs Responses) — this should be visible if the survey has ViewCount > 0
+3. Note the **Export CSV** button next to "Load Aggregate Results"
+4. Click "Load Aggregate Results"
+5. Wait for the results table to appear (Option / Count / Percentage columns)
+6. **Run redaction script**
+7. Take full-page screenshot -> `docs/screenshots/aggregate-results.png`
+
+> The aggregate-results screenshot now also serves as evidence for the engagement funnel and CSV export button.
+
+### Screenshot 14: `csv-export.png` — CSV export confirmation
+
+1. From the same page, click "Export CSV"
+2. The browser should trigger a file download (no visual change on page, but the button shows a spinner briefly)
+3. If the download completes, take a screenshot showing the page state -> `docs/screenshots/csv-export.png`
+
+> **Note:** If the export triggers a browser download dialog that Playwright can't screenshot, skip this screenshot and document CSV export as API-tested in the journeys doc.
 
 ---
 
 ## Step 9: Capture Threshold Gate
 
-### Screenshot 12: `threshold-gate.png`
+### Screenshot 15: `threshold-gate.png`
 
 1. Navigate to a survey that has 0 responses (or fewer than its threshold)
 2. Click "Load Aggregate Results"
@@ -243,7 +276,7 @@ Then:
 
 ## Step 10: Capture 404 Page
 
-### Screenshot 13: `404-page.png`
+### Screenshot 16: `404-page.png`
 
 1. Navigate to `/nonexistent-page-xyz`
 2. Wait for styled 404 page with search icon
@@ -260,10 +293,10 @@ Write or update `docs/USER-JOURNEYS.md` with the following structure. **Use `app
 ```markdown
 # Candour — User Journey Test Evidence
 
-> End-to-end walkthrough of 9 core user journeys, with evidence captured via browser automation and API testing.
+> End-to-end walkthrough of 11 core user journeys, with evidence captured via browser automation and API testing.
 
 **Date:** {TODAY'S DATE}
-**System:** Candour anonymity-first survey platform
+**System:** Candour anonymity-first survey platform (v0.4.0)
 **Infra:** Azure Functions (Flex Consumption), Azure Cosmos DB (Serverless), Azure Static Web Apps
 **Frontend:** https://app.candour.example
 **API:** https://api.candour.example
@@ -272,7 +305,7 @@ Write or update `docs/USER-JOURNEYS.md` with the following structure. **Use `app
 
 ## Journey 0: Home Page & Navigation
 [Reference screenshots: home-page.png, home-page-authenticated.png]
-[Document what was verified]
+[Document what was verified — including GitHub footer]
 
 ## Journey 1: Admin Creates a Survey
 [Reference screenshots: admin-dashboard.png, survey-builder.png, survey-detail-draft.png]
@@ -280,33 +313,45 @@ Write or update `docs/USER-JOURNEYS.md` with the following structure. **Use `app
 ## Journey 2: Admin Publishes Survey & Gets Tokens
 [Reference screenshot: survey-published-tokens.png]
 
-## Journey 3: Respondent Submits Anonymous Response
+## Journey 3: Consent Gate — Respondent Sees Admin Names
+[Reference screenshot: consent-gate.png]
+[Document: "Before you begin" card shows admin names, accept/decline buttons, anonymity assurance]
+
+## Journey 4: Respondent Submits Anonymous Response
 [Reference screenshots: survey-form.png, survey-submitted.png, survey-form-not-found.png]
 
-## Journey 4: Admin Views Aggregate Results
-[Reference screenshot: aggregate-results.png]
+## Journey 5: Engineering Mode — Proving Anonymity
+[Reference screenshot: engineering-mode.png]
+[Document: Expanded panel shows exact Cosmos DB document stored + "not stored" list]
 
-## Journey 5: Threshold Gate — Results Blocked Below Minimum
+## Journey 6: Admin Views Aggregate Results & Engagement
+[Reference screenshots: survey-detail.png, aggregate-results.png]
+[Document: Engagement funnel (views vs responses), Export CSV button visible]
+
+## Journey 7: Admin Exports CSV
+[Reference screenshot: csv-export.png (if captured) or document API behavior]
+
+## Journey 8: Threshold Gate — Results Blocked Below Minimum
 [Reference screenshot: threshold-gate.png]
 
-## Journey 6: Token Reuse Prevention
+## Journey 9: Token Reuse Prevention
 [Document the server-side behavior — no screenshot needed]
 
-## Journey 7: API Auth Enforcement
+## Journey 10: API Auth Enforcement
 [Document curl test results — no screenshot needed]
 
-## Journey 8: 404 Page
+## Journey 11: 404 Page
 [Reference screenshot: 404-page.png]
 
 ---
 
 ## Screenshot Inventory
-[Table mapping each PNG to its journey]
+[Table mapping each PNG to its journey — 16 screenshots total]
 
 ---
 
 ## Design Review Summary
-[Table of resolved UX issues from C1 through m7]
+[Table of resolved UX issues]
 ```
 
 Use the existing `docs/USER-JOURNEYS.md` as reference for the exact prose, verified items, and design review table. Update the date and any details that changed.
@@ -315,7 +360,7 @@ Use the existing `docs/USER-JOURNEYS.md` as reference for the exact prose, verif
 
 ## Step 12: Verify
 
-1. List all files in `docs/screenshots/` — confirm all 13 PNGs exist
+1. List all files in `docs/screenshots/` — confirm all 16+ PNGs exist (consent-gate, engineering-mode, csv-export are new)
 2. Check that no filename contains PII
 3. Read through the generated `docs/USER-JOURNEYS.md` and confirm:
    - All screenshot references point to existing files
@@ -327,4 +372,4 @@ Use the existing `docs/USER-JOURNEYS.md` as reference for the exact prose, verif
 
 ## Done
 
-All 13 screenshots captured with PII redacted. `docs/USER-JOURNEYS.md` updated with current evidence. Ready to commit.
+All 16+ screenshots captured with PII redacted. `docs/USER-JOURNEYS.md` updated with current evidence including consent gate, engineering mode, CSV export, and engagement metrics. Ready to commit.

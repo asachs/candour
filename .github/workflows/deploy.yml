@@ -65,6 +65,7 @@ jobs:
           cat > ./publish-web/wwwroot/appsettings.json <<EOF
           {
             "ApiBaseUrl": "${{ vars.API_BASE_URL }}",
+            "EngineeringMode": true,
             "AzureAd": {
               "Enabled": true,
               "Authority": "https://login.microsoftonline.com/${{ vars.TEST_ENTRA_TENANT_ID }}",

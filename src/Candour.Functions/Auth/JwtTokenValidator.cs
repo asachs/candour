@@ -17,11 +17,15 @@ public class EntraIdJwtTokenValidator : IJwtTokenValidator
     private readonly EntraIdOptions _options;
     private readonly ConfigurationManager<OpenIdConnectConfiguration> _configManager;
 
+    // Personal Microsoft accounts (MSA) issue tokens from a different tenant
+    private const string MsaConsumerTenantId = "9188040d-6c67-4c5b-b112-36a304b66dad";
+
     public EntraIdJwtTokenValidator(IOptions<EntraIdOptions> options)
     {
         _options = options.Value;
+        // Use 'common' metadata to get signing keys for both organizational and personal accounts
         _configManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-            _options.MetadataAddress,
+            "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
             new OpenIdConnectConfigurationRetriever(),
             new HttpDocumentRetriever());
     }
@@ -32,7 +36,11 @@ public class EntraIdJwtTokenValidator : IJwtTokenValidator
 
         var validationParameters = new TokenValidationParameters
         {
-            ValidIssuer = $"https://login.microsoftonline.com/{_options.TenantId}/v2.0",
+            ValidIssuers = new[]
+            {
+                $"https://login.microsoftonline.com/{_options.TenantId}/v2.0",
+                $"https://login.microsoftonline.com/{MsaConsumerTenantId}/v2.0"
+            },
             ValidAudience = string.IsNullOrEmpty(_options.Audience) ? _options.ClientId : _options.Audience,
             IssuerSigningKeys = config.SigningKeys,
             ValidateIssuer = true,
