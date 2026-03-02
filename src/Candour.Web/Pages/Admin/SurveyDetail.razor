@@ -279,9 +279,11 @@
         var result = await Api.ExportCsvAsync(SurveyId);
         if (result.Success && result.Content != null)
         {
-            var base64 = Convert.ToBase64String(result.Content);
-            var dataUrl = $"data:text/csv;base64,{base64}";
-            await JS.InvokeVoidAsync("eval", $"(function(){{var a=document.createElement('a');a.href='{dataUrl}';a.download='{result.FileName}';document.body.appendChild(a);a.click();document.body.removeChild(a);}})()");
+            var fileName = result.FileName ?? $"{_survey!.Title}-responses.csv";
+            if (!fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                fileName += ".csv";
+
+            await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, result.Content);
         }
         else
         {

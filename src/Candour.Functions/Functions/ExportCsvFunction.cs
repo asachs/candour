@@ -35,6 +35,7 @@ public class ExportCsvFunction
         var ok = req.CreateResponse(System.Net.HttpStatusCode.OK);
         ok.Headers.Add("Content-Type", "text/csv; charset=utf-8");
         ok.Headers.Add("Content-Disposition", $"attachment; filename=\"{result.FileName}\"");
+        ok.Headers.Add("Access-Control-Expose-Headers", "Content-Disposition");
         await ok.Body.WriteAsync(System.Text.Encoding.UTF8.GetBytes(result.CsvContent!), ct);
         return ok;
     }
