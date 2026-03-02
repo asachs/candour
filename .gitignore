@@ -56,6 +56,9 @@ test-results/
 playwright-report/
 blob-report/
 
+## MkDocs
+docs-site/site/
+
 ## App specific
 appsettings.Development.json
 appsettings.Local.json
