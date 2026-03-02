@@ -188,10 +188,6 @@ graph TD
     InfraCosmos --> Core
     Shared["Candour.Shared"] --> Core
 
-    style Core fill:#e8f5e9,stroke:#2e7d32
-    style Application fill:#e3f2fd,stroke:#1565c0
-    style Functions fill:#fff3e0,stroke:#e65100
-    style Web fill:#fce4ec,stroke:#c62828
 ```
 
 **Dependency rule:** Dependencies point inward. `Candour.Core` depends on nothing. `Candour.Application` depends only on `Candour.Core`. Infrastructure and presentation layers depend on the inner layers but never on each other.

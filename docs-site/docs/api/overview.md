@@ -63,8 +63,6 @@ flowchart LR
         H["GET /surveys/{id}/export<br/>Export responses as CSV"]
     end
 
-    style Public fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-    style Admin fill:#fce4ec,stroke:#c62828,color:#b71c1c
 ```
 
 ---

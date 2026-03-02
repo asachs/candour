@@ -1,20 +1,4 @@
-/* Mermaid: boost font size and dark-mode contrast */
-.mermaid svg {
-  font-size: 16px !important;
-}
-
-[data-md-color-scheme="slate"] .mermaid .node rect,
-[data-md-color-scheme="slate"] .mermaid .node polygon,
-[data-md-color-scheme="slate"] .mermaid .node circle {
-  opacity: 0.85;
-}
-
-[data-md-color-scheme="slate"] .mermaid .nodeLabel,
-[data-md-color-scheme="slate"] .mermaid .edgeLabel {
-  color: #1a1a2e !important;
-  font-weight: 500;
-}
-
-[data-md-color-scheme="slate"] .mermaid .label {
-  color: #1a1a2e !important;
+/* Mermaid: improve readability */
+.mermaid {
+  font-size: 1rem !important;
 }

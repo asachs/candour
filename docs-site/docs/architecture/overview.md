@@ -52,10 +52,6 @@ flowchart TB
     BW -.->|"MSAL Login"| ENTRA
     ENTRA -.->|"JWT"| BW
 
-    style Client fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
-    style Functions fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
-    style Data fill:#fff3e0,stroke:#e65100,color:#bf360c
-    style SWA fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
 ```
 
 ## Component Descriptions
