@@ -343,10 +343,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
       ]
       cors: {
-        allowedOrigins: union([
-          'https://localhost:5000'
-          'https://localhost:5001'
-        ], [empty(staticWebAppUrl) ? swaUrl : staticWebAppUrl])
+        allowedOrigins: [empty(staticWebAppUrl) ? swaUrl : staticWebAppUrl]
         supportCredentials: true
       }
     }
