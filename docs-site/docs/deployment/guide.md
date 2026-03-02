@@ -233,20 +233,7 @@ az resource update \
 
 ### 3.3 Blazor WASM Configuration
 
-Update `src/Candour.Web/wwwroot/appsettings.json` before publishing:
-
-```json
-{
-  "AzureAd": {
-    "Enabled": true,
-    "Authority": "https://login.microsoftonline.com/{your-tenant-id}",
-    "ClientId": "{your-client-id}",
-    "ApiScope": "api://{your-client-id}/access_as_user"
-  },
-  "ApiBaseUrl": "https://api.candour.example",
-  "EngineeringMode": true
-}
-```
+Update the Blazor WASM configuration as described in [Blazor WASM Configuration](../configuration/wasm.md). Key values to set: `Authority` (with your tenant ID), `ClientId`, `ApiScope`, and `ApiBaseUrl` (your Functions API URL).
 
 !!! note "Placeholder values"
     Replace `{your-tenant-id}` and `{your-client-id}` with the values recorded in step 1.2.

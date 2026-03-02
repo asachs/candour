@@ -43,47 +43,13 @@ Candour is built for teams that want to ask hard questions and trust the answers
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph Client["Client"]
-        BW["Blazor WASM<br/>(Admin Dashboard)"]
-        RF["Survey Form<br/>(Respondent)"]
-    end
+- **Blazor WebAssembly** frontend hosted on Azure Static Web Apps (admin dashboard + respondent survey form)
+- **Azure Functions** (.NET 9, Flex Consumption) API with middleware pipeline: authentication, rate limiting, and anonymity stripping
+- **Cosmos DB** (serverless) for surveys, responses, tokens, and rate limit entries
+- **Entra ID** for admin OAuth 2.0 / JWT authentication; respondents are fully anonymous
+- **Key Vault** for RSA-wrapped batch secrets; **App Insights** for API telemetry
 
-    subgraph Azure["Azure"]
-        subgraph SWA["Static Web Apps"]
-            BW
-            RF
-        end
-
-        subgraph Functions["Azure Functions (Flex Consumption)"]
-            AUTH["Auth Middleware<br/>Entra ID JWT + Admin Allowlist"]
-            RL["Rate Limiting<br/>Cosmos DB + TTL"]
-            ANON["Anonymity Middleware<br/>IP Stripping"]
-            API["API Endpoints<br/>MediatR CQRS"]
-        end
-
-        subgraph Data["Data & Security"]
-            COSMOS[("Cosmos DB<br/>(Serverless)")]
-            KV["Key Vault<br/>Batch Secrets (RSA)"]
-            AI["App Insights"]
-        end
-
-        ENTRA["Entra ID<br/>(Authentication)"]
-    end
-
-    BW -->|"Entra ID JWT"| AUTH
-    RF -->|"Blind Token"| RL
-    AUTH --> RL
-    RL --> ANON
-    ANON --> API
-    API --> COSMOS
-    API --> KV
-    API --> AI
-    BW -.->|"MSAL Login"| ENTRA
-    ENTRA -.->|"JWT"| BW
-
-```
+For the full architecture diagram, see [Architecture Overview](architecture/overview.md).
 
 **Admin routes** (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`, `.../export`) require Entra ID JWT or API key.
 

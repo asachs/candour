@@ -93,30 +93,9 @@ On submission, the token is hashed with SHA256 before storage. This choice provi
 
 ## Why No Foreign Key
 
-The `UsedToken` entity:
+The `SurveyResponse` entity contains only four fields: `Id`, `SurveyId`, `Answers`, and `SubmittedAt`. It deliberately excludes all identity fields. See the [Data Model](../architecture/data-model.md#surveyresponse) for the full entity definitions.
 
-```csharp
-public class UsedToken
-{
-    public string TokenHash { get; set; } // SHA256(token), primary key
-    public Guid SurveyId { get; set; }
-}
-```
-
-The `SurveyResponse` entity:
-
-```csharp
-public class SurveyResponse
-{
-    public Guid Id { get; set; }       // Random UUID
-    public Guid SurveyId { get; set; }
-    public string Answers { get; set; } // JSON
-    public DateTime SubmittedAt { get; set; } // Jittered
-    // DELIBERATELY NO: RespondentId, IpAddress, UserAgent, TokenReference
-}
-```
-
-Both entities share `SurveyId`, but this only identifies the survey -- not the respondent. Within a survey, there is no column that could join a specific token hash to a specific response. This is the structural guarantee: even a database administrator with full access cannot link tokens to responses.
+Both `UsedToken` and `SurveyResponse` share `SurveyId`, but this only identifies the survey -- not the respondent. There is no column that could join a specific token hash to a specific response, which is the structural guarantee of anonymity. See [Why No Foreign Keys?](../architecture/data-model.md#why-no-foreign-keys) for the full design rationale.
 
 !!! example "What a database query reveals"
     An admin can query "which token hashes have been used for survey X" and "what responses exist for survey X." They cannot determine which hash corresponds to which response. The two result sets are independent.

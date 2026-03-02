@@ -114,16 +114,7 @@ Browser (Blazor WASM)
         +--> Cosmos DB: read/write survey data
 ```
 
-**Protected admin routes:**
-
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/surveys` | GET | List all surveys |
-| `/api/surveys` | POST | Create a new survey |
-| `/api/surveys/{id}/publish` | POST | Publish a draft survey |
-| `/api/surveys/{id}/analyze` | POST | Trigger AI analysis |
-| `/api/surveys/{id}/results` | GET | View aggregate results |
-| `/api/surveys/{id}/export` | GET | Export response CSV |
+Admin routes require authentication while public routes are accessible without credentials. See the [API Reference](../api/overview.md#endpoint-summary) for the complete endpoint list.
 
 ### Respondent Operations
 

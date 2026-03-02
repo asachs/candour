@@ -67,19 +67,4 @@ Engineering mode is controlled by the `EngineeringMode` configuration key.
 
 ## CSV Export Safety
 
-Admins can export response data as CSV via `GET /api/surveys/{id}/export`. The export preserves all anonymity guarantees through three mechanisms:
-
-### Threshold Gating
-
-Export is blocked until the survey meets its anonymity threshold -- the same minimum response count required for viewing aggregate results. This prevents scenarios where a small number of responses could be correlated with known respondents through process of elimination.
-
-### CSPRNG Row Shuffling
-
-Before CSV generation, all responses are shuffled using a cryptographically secure pseudo-random number generator (CSPRNG). This destroys any ordering correlation. Even if an observer knows the approximate time a specific person submitted their response, the row order in the exported CSV reveals nothing about submission sequence.
-
-### Zero PII Columns
-
-The CSV contains only question answers and jittered timestamps. No identity fields exist in the `SurveyResponse` entity, so no identity fields can appear in the export. This is not a filtering step -- there is nothing to filter out.
-
-!!! example "What the CSV contains"
-    Each row in the exported CSV has the survey's question columns and a `SubmittedAt` column with jittered timestamps. The rows are in random order. There is no respondent ID, no IP address, no token reference, and no submission sequence number.
+For CSV export anonymity guarantees (threshold enforcement, CSPRNG row shuffling), see [Viewing Results](../admin/viewing-results.md#csv-export).

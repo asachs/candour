@@ -4,22 +4,7 @@ This guide walks through setting up a local Candour development environment from
 
 ## Prerequisites
 
-Install the following tools before proceeding:
-
-| Tool | Minimum Version | Install Command / Link |
-|------|----------------|------------------------|
-| **.NET SDK** | 9.0 | [Download .NET 9](https://dotnet.microsoft.com/download/dotnet/9.0) |
-| **Azure Functions Core Tools** | 4.x | `npm install -g azure-functions-core-tools@4 --unsafe-perm true` or [Manual install](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) |
-| **Azure Cosmos DB Emulator** | Latest | [Download Emulator](https://learn.microsoft.com/en-us/azure/cosmos-db/local-emulator) (Windows/macOS) or use Docker (see below) |
-| **Git** | 2.x | [Download Git](https://git-scm.com/) |
-
-Verify your installations:
-
-```bash
-dotnet --version    # Should print 9.0.x
-func --version      # Should print 4.x.x
-git --version       # Should print 2.x.x
-```
+Ensure you have the [required software](../getting-started/prerequisites.md) installed before proceeding.
 
 ## Clone and Restore
 
@@ -74,28 +59,7 @@ The database and containers are created automatically on first run by the `Cosmo
 
 ## Configuration
 
-The API uses `local.settings.json` for local configuration. The default file at `src/Candour.Functions/local.settings.json` is pre-configured for local development:
-
-```json
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "CosmosDb__ConnectionString": "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==", // Well-known public emulator key -- not a secret
-    "CosmosDb__DatabaseName": "candour",
-    "Candour__ApiKey": "",
-    "Candour__Auth__UseEntraId": "false",
-    "Candour__Auth__TenantId": "",
-    "Candour__Auth__ClientId": "",
-    "Candour__Auth__Audience": ""
-  },
-  "Host": {
-    "CORS": "http://localhost:5000,http://localhost:5001,https://localhost:5001",
-    "CORSCredentials": true
-  }
-}
-```
+The API uses `local.settings.json` for local configuration. The default `local.settings.json` at `src/Candour.Functions/local.settings.json` is pre-configured for local development with auth disabled and the Cosmos DB Emulator connection string. See the [Functions API Configuration](../configuration/functions.md#local-development-localsettingsjson) for the full settings reference.
 
 Key configuration notes:
 

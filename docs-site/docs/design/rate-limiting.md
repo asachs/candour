@@ -147,6 +147,9 @@ Policies are defined in configuration and bound via `IOptions<RateLimitingOption
 !!! warning "Token validation is the tightest limit"
     The `validate-token` endpoint allows only 10 requests per minute, and `submit-response` allows only 5. These are the most sensitive endpoints for abuse -- token enumeration and spam submissions.
 
+!!! note "Current defaults"
+    For current default values, see the [Rate Limiting Configuration](../configuration/rate-limiting.md).
+
 ### Middleware Logic
 
 ```

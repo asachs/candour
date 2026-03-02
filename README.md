@@ -18,6 +18,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/.NET-9.0-purple.svg" alt=".NET 9" />
   <img src="https://img.shields.io/badge/anonymity-by_design-teal.svg" alt="Anonymity by Design" />
+  <a href="https://asachs.github.io/candour/"><img src="https://img.shields.io/badge/docs-asachs.github.io%2Fcandour-blue.svg" alt="Documentation" /></a>
 </p>
 
 ## Why Candour?
@@ -148,21 +149,20 @@ Candour runs on Azure's serverless and free tiers. At low-to-moderate usage (a f
 
 ## Deployment
 
-See [docs/DEPLOY.md](docs/DEPLOY.md) for full Azure deployment instructions covering:
-- Entra ID app registration
-- Azure infrastructure provisioning
-- Configuration and CORS
-- CI/CD pipeline
+See the [Deployment Guide](https://asachs.github.io/candour/deployment/guide/) for full Azure deployment instructions covering Entra ID app registration, infrastructure provisioning, configuration, and CI/CD.
 
 ## Engineering Mode
 
 After submitting a survey response, respondents see an expandable panel showing the exact Cosmos DB document that was stored — and an explicit list of what was *not* stored. This proves the anonymity architecture isn't just a claim: the stored record contains only `Id`, `SurveyId`, `Answers`, and `SubmittedAt`. No IP address, no user agent, no token, no identity, no cookies.
 
-Controlled by the `EngineeringMode` configuration key (default: `true`). See [docs/DEPLOY.md](docs/DEPLOY.md) for configuration details.
+Controlled by the `EngineeringMode` configuration key (default: `true`). See the [Configuration Reference](https://asachs.github.io/candour/configuration/functions/) for details.
 
 ## Documentation
 
-- [Deployment Guide](docs/DEPLOY.md) — Azure deployment instructions
+**[asachs.github.io/candour](https://asachs.github.io/candour/)** — full documentation site covering architecture, security, API reference, deployment, configuration, admin guide, and development.
+
+In-repo design documents:
+
 - [Anonymity Architecture](docs/ANONYMITY.md) — threat model and design decisions
 - [Rate Limiting Design](docs/DESIGN-RATE-LIMITING.md) — Cosmos DB-backed distributed rate limiting
 - [Integration Testing Design](docs/DESIGN-INTEGRATION-TESTING.md) — three-phase testing strategy

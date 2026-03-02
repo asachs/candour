@@ -89,13 +89,7 @@ All error responses return a JSON body with an `error` field:
 
 ## Rate Limiting
 
-Three public-facing endpoints are protected by distributed rate limiting backed by Cosmos DB. Limits are enforced per client IP address.
-
-| Endpoint | Policy | Max Requests | Window |
-|----------|--------|--------------|--------|
-| `GET /api/surveys/{id}` | `get-survey` | 30 | 60 seconds |
-| `POST /api/surveys/{id}/validate-token` | `validate-token` | 10 | 60 seconds |
-| `POST /api/surveys/{id}/responses` | `submit-response` | 5 | 60 seconds |
+Each public endpoint has a rate limit policy. See [Rate Limiting](../configuration/rate-limiting.md#default-policies) for current limits per endpoint.
 
 When a rate limit is exceeded, the API returns `429 Too Many Requests` with the following headers:
 

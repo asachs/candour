@@ -66,14 +66,9 @@ The respondent must click **"I understand, begin survey"** to proceed to the sur
 
 ## Token Security
 
-Tokens are designed to protect respondent anonymity at a cryptographic level:
+Each token is a one-time-use, cryptographically random string. Tokens cannot be guessed, reused, or linked back to a specific response after submission.
 
-| Property | Mechanism |
-|----------|-----------|
-| **One-time use** | After submission, the token's hash is stored in a `usedTokens` collection. Subsequent validation of the same token returns a rejection. |
-| **Unlinkable** | There is no foreign key between `usedTokens` and `responses`. Even with database access, it is impossible to determine which response came from which token. |
-| **Blind generation** | Tokens are generated using HMAC-SHA256 with a batch secret. The secret is stored in Azure Key Vault and is not accessible to admins. |
-| **Non-guessable** | Tokens are cryptographically random. Brute-forcing a valid token is computationally infeasible. |
+Tokens use HMAC-SHA256 blind generation and one-way SHA-256 hash storage for unlinkability. See [Blind Token Scheme](../security/blind-tokens.md) for the full cryptographic design.
 
 ## Next Steps
 

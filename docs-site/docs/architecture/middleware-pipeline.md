@@ -31,59 +31,11 @@ Incoming Request
 
 ## AuthenticationMiddleware
 
-The authentication middleware protects admin routes while allowing respondent routes to pass through unauthenticated.
+The authentication middleware protects admin routes while allowing respondent routes to pass through unauthenticated. It uses a compiled regex to match admin paths (`/api/surveys`, `.../publish`, `.../analyze`, `.../results`, `.../export`) and skips all respondent-facing routes such as `GET /api/surveys/{id}`, `POST .../validate-token`, and `POST .../responses`.
 
-### Which Routes It Protects
+The middleware supports two modes: **Entra ID** (JWT validation against Microsoft Entra ID) for production, and **API key** (shared secret via the `X-Api-Key` header) for testing and local development. In either mode, unauthorized requests receive `401` or `403` responses, and `OPTIONS` requests are passed through for CORS preflight.
 
-The middleware uses a compiled regex to match admin routes:
-
-```
-^/api/surveys(?:/[^/]+/(?:publish|analyze|results|export))?$
-```
-
-This matches:
-
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/surveys` | GET/POST | List surveys / create survey |
-| `/api/surveys/{id}/publish` | POST | Publish a survey |
-| `/api/surveys/{id}/analyze` | POST | Trigger AI analysis |
-| `/api/surveys/{id}/results` | GET | View aggregate results |
-| `/api/surveys/{id}/export` | GET | Export CSV |
-
-All other routes (including `GET /api/surveys/{id}`, `POST .../validate-token`, and `POST .../responses`) pass through without authentication checks.
-
-### Authentication Modes
-
-The middleware supports two authentication modes, controlled by the `Candour:Auth:UseEntraId` configuration setting:
-
-**Entra ID mode** (`UseEntraId = true`):
-
-1. Extracts the `Bearer` token from the `Authorization` header.
-2. Validates the JWT against the tenant's OpenID Connect metadata (issuer, audience, signing keys).
-3. If an admin email allowlist is configured (`Candour:Auth:AdminEmails`), checks that the token's email claim matches an entry in the list. Email is resolved from the `email`, `preferred_username`, or `upn` claims, in that order.
-4. Returns `401 Unauthorized` if the token is missing or invalid.
-5. Returns `403 Forbidden` if the token is valid but the user is not on the allowlist.
-6. On success, stores the `ClaimsPrincipal` in `context.Items["User"]` for downstream handlers.
-
-**API key mode** (`UseEntraId = false`):
-
-1. Validates the request against the configured API key via the `X-Api-Key` header.
-2. If the configured API key is empty, all admin requests are allowed (development convenience).
-3. Returns `401 Unauthorized` if the key does not match.
-
-!!! note "CORS preflight"
-    The middleware skips `OPTIONS` requests to allow CORS preflight to succeed without credentials.
-
-### Admin Email Allowlist
-
-The `Candour:Auth:AdminEmails` setting accepts a semicolon-separated list of email addresses. When set, only users whose JWT contains a matching email are granted access to admin routes. Comparison is case-insensitive.
-
-```
-Candour__Auth__AdminEmails=admin@app.candour.example;lead@app.candour.example
-```
-
-When the allowlist is empty, any valid JWT from the configured tenant is accepted.
+For full details on authentication modes, claim resolution, the admin email allowlist, and configuration, see [Authentication Modes](../configuration/auth-modes.md).
 
 ## RateLimitingMiddleware
 
@@ -91,11 +43,7 @@ The rate limiting middleware protects public endpoints from abuse. It uses Cosmo
 
 ### Which Endpoints Are Rate-Limited
 
-| Endpoint | Policy Name | Window | Max Requests |
-|----------|------------|--------|--------------|
-| `GET /api/surveys/{id}` | `get-survey` | 60 seconds | 30 |
-| `POST /api/surveys/{id}/validate-token` | `validate-token` | 60 seconds | 10 |
-| `POST /api/surveys/{id}/responses` | `submit-response` | 60 seconds | 5 |
+Rate limits are applied per-endpoint with configurable windows and request caps. See [Rate Limiting Configuration](../configuration/rate-limiting.md#default-policies) for the current per-endpoint policies.
 
 Admin routes are **not** rate-limited. They are already protected by authentication.
 
@@ -141,19 +89,7 @@ When a request arrives:
 
 ### 429 Response Format
 
-When a request is rate-limited, the response includes:
-
-```http
-HTTP/1.1 429 Too Many Requests
-Retry-After: 45
-X-RateLimit-Limit: 5
-X-RateLimit-Remaining: 0
-Content-Type: application/json
-
-{
-  "error": "Rate limit exceeded. Try again in 45 seconds."
-}
-```
+When rate-limited, the API returns `429 Too Many Requests` with `Retry-After` and `X-RateLimit-*` headers. See [Rate Limiting Configuration](../configuration/rate-limiting.md#429-response-format) for the full response format.
 
 ## AnonymityMiddleware
 
